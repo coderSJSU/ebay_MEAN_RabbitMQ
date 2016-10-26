@@ -46,7 +46,7 @@ trans.controller('transaction', function($scope, $http) {
 			else
 				{
 ////					var results = data.data;
-//					var q = results[0].quantity;
+					var q = data.quantity;
 					if(parseInt(data.quantity)>=parseInt($scope.quantity))
 				{
 				$http({

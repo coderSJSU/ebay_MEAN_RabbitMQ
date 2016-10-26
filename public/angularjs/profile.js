@@ -82,17 +82,15 @@ $scope.init = function init() {
 			else
 				{
 				var results = data.data;
-				for(var i=0; i < results.length; i++){
-					$scope.first_nm = results[i].first_nm;
-					$scope.last_nm = results[i].last_nm;
-					$scope.address = results[i].address;
-					$scope.month = results[i].month;
-					$scope.day = results[i].day;
-					$scope.year = results[i].year;
-					$scope.city = results[i].city;
-					$scope.country = results[i].country;
-					$scope.email_id = results[i].email_id;
-				}
+					$scope.first_nm = results.firstName;
+					$scope.last_nm = results.lastName;
+					$scope.address = results.address;
+					$scope.month = results.month;
+					$scope.day = results.day;
+					$scope.year = results.year;
+					$scope.city = results.city;
+					$scope.country = results.country;
+					$scope.email_id = results.email;
 				}
 		}).error(function(error) {
 		});
@@ -110,7 +108,10 @@ $scope.submit = function submit() {
 			"day": $scope.day,
 			"address": $scope.address,
 			"city": $scope.city,
-			"country": $scope.country
+			"country": $scope.country,
+			"first_nm": $scope.first_nm,
+			"last_nm": $scope.last_nm,
+			"email_id": $scope.email_id
 		}
 	}).success(function(data) {
 		//checking the response data for statusCode

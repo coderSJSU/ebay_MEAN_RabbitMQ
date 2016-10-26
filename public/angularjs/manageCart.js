@@ -27,7 +27,7 @@ cart.controller('cart', function($scope, $http) {
 				var total = 0;
 				var current = 0;
 				for(var i=0; i < results.length; i++){
-					current = (parseInt(results[i].price) + (isNaN(parseInt(results[i].ship_price))? 0 : parseInt(results[i].ship_price)))*parseInt(results[i].quantity);
+					current = (parseInt(results[i].price) + (isNaN(parseInt(results[i].deliveryPrice))? 0 : parseInt(results[i].deliveryPrice)))*parseInt(results[i].quantity);
 					
 					total = parseInt(total) + current;
 					$scope.products.push(results[i]);
@@ -38,14 +38,14 @@ cart.controller('cart', function($scope, $http) {
 		});
 	};
 	
-	$scope.removeFromCart = function(id, quantity, price, ship_price, total){				
-		var current = (parseInt(price) + parseInt(ship_price))*parseInt(quantity);
+	$scope.removeFromCart = function(cartId, id, quantity, price, deliveryPrice, total){				
+		var current = (parseInt(price) + parseInt(deliveryPrice))*parseInt(quantity);
 		total = total - current;
 		
 		$http({
 			method : "POST",
 			url : '/removeFromCart',
-			data: {"prod_id": id}
+			data: {"cart_id": cartId}
 		}).success(function(data) {
 			if (data.statusCode == 401) {
 				$scope.invalid_login = false;

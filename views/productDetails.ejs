@@ -45,6 +45,7 @@
 				</div>
 			</div><br><br>
 			<div class="row">
+			<% var diff = Math.ceil((data.add_ts - new Date())/(1000*60*60*24)); %>
 				<div class="col-sm-1">
 					<label  style="height:100%; min-height:10px; margin-top:5px; vertical-align:middle;  font-size:normal; font-weight: normal font-family: Helvetica neue,Helvetica,Arial,Sans-serif; font-size: 16px">Quantity</label>
 				</div>
@@ -59,10 +60,10 @@
 				</div>
 				<% if(data.is_auction =='1') {%>
 				<div class="col-sm-6">
-					<% if(data.days =='4') {%>
+					<% if(diff =='4') {%>
 						Last Day to bid
 					<% } else { %>	
-				  		<%=4-data.days %>d left
+				  		<%=4-diff %>d left
 				  	<% } %>	
 				</div>
 				<% } %>
@@ -88,29 +89,15 @@
 				<div class="col-sm-5">
 					<div class="row">
 						<% if(data.is_auction =='1') {%>
-							<% if(data.max_bidder == 1 && data.days> 4) { %>
-							<div class="col-sm-6">
-									<font color="green" size="5" >You won the bid</font>
-							</div>
-							<div class="col-sm-6">
-								<input type="button" class="on btn btn-primary" id="bidButton"  value="Buy Now" ng-click="buyNow(<%=data.prod_id%>);"
-								value="buyNow" >
-							</div>
-							
-							<% } else if (data.alreadyBid == 0 && data.days< 5) {%>
+							<% if( diff< 5) {%>
 							<div class="col-sm-6">
 								<input type="text" class="form-control" style="text-align: right;" id="bidAmount" ng-model ="bidAmount" >
 							</div>
 							<div class="col-sm-6">
-								<input type="button" class="on btn btn-primary" id="bidButton"  value="Place bid" ng-click="addBid(bidAmount, <%=data.prod_id%>);"
+								<input type="button" class="on btn btn-primary" id="bidButton"  value="Place bid" ng-click="addBid(bidAmount, '<%=data._id%>');"
 								value="addBid">
 							</div>
-							<% } else if (data.alreadyBid == 1 && data.days< 5){%>
-							<div class="col-sm-9">
-								<label><font style="font-weight: bold;">You already placed the bid</label>
-								
-							</div>
-						<%  } }%>
+							<% }  }%>
 						</div>
 					</div>	
 				</div>
