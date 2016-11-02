@@ -4,7 +4,6 @@ var crypto = require('crypto');
 var mongo = require("./mongo");
 var mongoURL = "mongodb://localhost:27017/test";
 var winston = require('winston');
-var mq_client = require('../rpc/client');
 
 var myCustomLevels = {
 	    levels: {
@@ -78,64 +77,30 @@ exports.loggedIn = function(req, res){
 	}
 	};
 
-	function register(req,res)
+	function register(msg, callback)
 	{
-		var firstName = req.param("firstname");
-		var lastName = req.param("lastname");
-		var email = req.param("email");
-		var password = req.param("password");
+		var firstName = msg.firstname;
+		var lastName = msg.lastname;
+		var email = msg.email;
+		var password = msg.password;
 		logger.event("new user registration", { email: email, first_name: firstName});
 		
 		password = encrypt(password);
 		var json_responses;
-		var tel = req.param("tel");
-		
+		var tel = msg.tel;
+		var res = {};
 		var post  = {first_nm: firstName, last_nm : lastName, email_id: email, pass: password, tel:tel };
-		var insertUser="insert into customer set first_nm =? , last_nm =? , email_id = ?, pass = ?, tel = ?, last_login_ts = CURRENT_TIMESTAMP";
-		
-		var firstName = req.param("firstname");
-		var lastName = req.param("lastname");
-		var email = req.param("email");
-		var password = req.param("password");
 		logger.event("new user registration", { email: email, first_name: firstName});
-		var msg_payload = { "email": email, "password": password, "firstname": firstName, "lastname": lastName,"tel":tel};
-		mq_client.make_request('register_queue',msg_payload, function(err,results){
-			
-			console.log(results);
-			if(err){
-				throw err;
-			}
-			else 
-			{
-				console.log("inside success");
-				if(results.statusCode == 200){
-					console.log("valid registration");
-					
-					req.session.last_ts = "";
-    				req.session.user_id = results.user_id;
-    				req.session.first_nm = results.first_nm ;
-					json_xxresponses = {"statusCode" : 200};
-					res.send(json_responses);
-					//res.send({"login":"Success"});
-				}
-				else {    
-					json_responses = {"statusCode" : 402};
-					res.send(json_responses);
-				}
-			}  
-		});
-		
-		
-		/*mongo.connect(mongoURL, function(){
-    		console.log('Connected too mongo at: ' + mongoURL + "name: " + req.body.name);
+		mongo.connect(mongoURL, function(){
+    		console.log('Connected too mongo at: ' + mongoURL + "name: " + msg.firstname);
     		var coll = mongo.collection('login');
     		coll.findOne({
     			"email": email
     		}, function(err, user){
     			if(user != null){
     				console.log("user exists");
-    				json_responses = {"statusCode" : 401};
-					res.send(json_responses);
+    				res.statusCode ="401";
+					//res.send(json_responses);
     			}	
     			else{	
 		    		coll.insert({
@@ -145,26 +110,22 @@ exports.loggedIn = function(req, res){
 		    			"password":password ,
 		    			"tel": tel
 		    		}, function(err, user){
-		    			console.log("user-- "+user);
-		    			console.log("user2-- "+user._id);
-		    			console.log("user1-- "+user["_id"]);
 		    			console.log("user3-- "+user.insertedIds);
 		    			if(err){
-		    					json_responses = {"statusCode" : 402};
-		    					res.send(json_responses);
+		    				res.statusCode ="402";
 		    			}
 		    			else
 		    			{
-		    				req.session.last_ts = "";
-		    				req.session.user_id = user.insertedIds;
-		    				req.session.first_nm = firstName ;
-		    				json_responses = {"statusCode" : 200};
-		    				res.send(json_responses);
+		    				//req.session.last_ts = "";
+		    				res.user_id = user.insertedIds,
+		    				res.first_nm = firstName ;
+		    				res.statusCode ="200";
 		    			}
 		    		});
     			}
+    			callback(null, res);
     		});
-    	});       */
+    	});       
 		
 	}	
 	
@@ -204,64 +165,38 @@ function registerOld(req,res)
 	},insertUser, [firstName, lastName, email, password, tel ]);
 }
 
-function checkUser(req, res){
-	var email_id = req.param("email");
-	var password = req.param("password");
+function checkUser(msg, callback){
+	var email_id = msg.email;
+	var password = msg.password;
+	var res = {};
+	console.log("In checkuser:"+ msg.email_id);
+	password = encrypt(password);
 	
-	var msg_payload = { "email_id": email_id, "password": password };
-	var json_responses;	
-	console.log("In POST Request = email_id:"+ email_id+"-"+password);
-	
-	mq_client.make_request('login_queue',msg_payload, function(err,results){
-		
-		console.log(results);
-		if(err){
-			throw err;
-		}
-		else 
-		{
-			console.log("inside success");
-			if(results.code == 200){
-				console.log("valid Login");
-				
-				req.session.first_nm = results.firstname;
-				req.session.last_nm = results.lastname;
-				req.session.email_id = results.emailid;
-				req.session.user_id = results.user_id;
-				req.session.last_ts = results.last_ts;
-				json_responses = {"login":"Success", };
-				console.log("valid Login2");
-				//logger.event("user logged in", { user_id: req.session.user_id});
-				json_responses = {"statusCode" : 200};
-				res.send(json_responses);
-				//res.send({"login":"Success"});
-			}
-			else {    
-				json_responses = {"statusCode" : 402};
-				res.send(json_responses);
-			}
-		}  
-	});
-	
-	//password = encrypt(password);
-	
-	//var json_responses;
+	var json_responses;
 //	var queryString = 'SELECT cust_id, first_nm, DATE_FORMAT(last_login_ts,\'%b %d %Y %h:%i %p\') as date  FROM datahub.customer WHERE email_id = ? and pass = ? ';
-/*
+
 	mongo.connect(mongoURL, function(){
-		console.log('Connected too mongo at: ' + mongoURL + "name: " + req.body.name);
+		//console.log('Connected too mongo at: ' + mongoURL + "name: " + req.body.name);
 		var coll = mongo.collection('login');
 		coll.findOne({
 			"email": email_id, "password":password
 		}, function(err, user){
+			console.log(user);
 			if(user != null){
-				
-				req.session.user_id = user._id;
-				req.session.first_nm = user.firstName;
-				req.session.last_ts = user.date;
-				console.log("inside : "+ req.session.user_id);
+				res.firstname = user.firstName;
+				res.lastname = user.lastName;
+				res.emailid = user.email;
+				res.user_id = user._id,
+				res.last_ts = user.last_ts,
+				res.value = "Success Login";
+				res.code = "200";
+				console.log("user exists");
+				//req.session.user_id = user._id;
+				//req.session.first_nm = user.firstName;
+				//req.session.last_ts = user.date;
+				///console.log("inside : "+ req.session.user_id);
 	    		coll.save({
-	    			"_id": req.session.user_id,
+	    			"user_id": user._id,
 	    			"firstName": user.firstName,
 	    			"lastName": user.lastName,
 	    			"email": user.email,
@@ -270,24 +205,22 @@ function checkUser(req, res){
 	    			"date":new Date()
 	    		}, function(err, user){
 	    			if(err){
-	    					json_responses = {"statusCode" : 402};
-	    					res.send(json_responses);
+	    					res.value = "error";
+	    					res.code = "402";
 	    			}
 	    			else
 	    			{
-	    				logger.event("user logged in", { user_id: req.session.user_id});
-	    				json_responses = {"statusCode" : 200};
-	    				res.send(json_responses);
 	    			}
+	    			callback(null, res);
 	    		});
 			}	
 			else{
-				console.log("user exists");
-				json_responses = {"statusCode" : 401};
-				res.send(json_responses);
+				res.value ="no user";
+				res.code = "402";
+				callback(null, res);
 			}
 		});
-	}); */
+	});
 }
 
 

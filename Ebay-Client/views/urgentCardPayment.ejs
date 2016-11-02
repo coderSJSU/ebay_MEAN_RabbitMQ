@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- Bootstrap Core CSS -->
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+	<link rel='stylesheet' href='/stylesheets/style.css' />
+	<script	src="/js/angular.min.js"></script>
+    <!-- Custom CSS -->
+    <link href="/stylesheets/business-casual.css" rel="stylesheet">
+	<script src="/angularjs/paymentBuyNow.js"></script>
+</head>
+
+
+<body ng-controller="paymentBuyNow" ng-app="paymentBuyNow" style="background-color: white; background-image: none;">
+	
+	<div class="container" style="padding: 20px">
+      <div class="panel" style="border:1px solid #ddd" >
+		<div class="panel-body">
+		<div class="row">
+		<div class="col-sm-1"></div>
+		<div class="col-sm-9">
+			<h2 style="font-size: large; font-weight: normal; font-family: Helvetica neue,Helvetica,Arial,Sans-serif; text-transform: none " >Verify Card</h2><br>
+			<div class="row">
+				<div class="col-sm-2"> <label  style="font-size:normal; font-weight: bold font-family: Helvetica neue,Helvetica,Arial,Sans-serif; font-size: 16px"><b>Amount:</b> {{bidAmount}}</label></div>
+			</div><br>
+			<div class="row">
+				<div class="col-sm-2"> <label  style="font-size:normal; font-weight: normal font-family: Helvetica neue,Helvetica,Arial,Sans-serif; font-size: 16px">Card Number</label></div>
+				<div class="col-sm-2"></div>
+				<div class="col-sm-4">	
+					<input type="text" class="formcontrol" ng-model="cNumber" id="cNumber" placeholder="Card Number" size="20" pattern='\d{16}' title="Credit card number should be of 16 digits." autufocus>
+				</div>
+			</div><br><br>
+			<div class="row">
+				<div class="col-sm-2"> <label style="font-size:normal; font-weight: normal font-family: Helvetica neue,Helvetica,Arial,Sans-serif; font-size: 16px">Expiration Date(YYYY-MM)</label></div>
+				<div class="col-sm-2"></div>
+				<div class="col-sm-4">	
+					<input type="month" class="formcontrol" ng-model="expDate" id="expDate" placeholder="Expiration Date" style="width:174px;" >
+				</div>
+			</div><br><br>
+			<div class="row">
+				<div class="col-sm-2"> <label  style="font-size:normal; font-weight: normal font-family: Helvetica neue,Helvetica,Arial,Sans-serif; font-size: 16px">CVV number</label></div>
+				<div class="col-sm-2"></div>
+				<div class="col-sm-4">	
+					<input type="password" class="formcontrol" ng-model="cvv" id="cvv" placeholder="CVV Number" size = "4" maxLength ="4">
+				</div>
+			</div><br><br>
+			
+		</div></div></div></div>
+      	 <div class="box-footer">
+                <div class="pull-right">
+                    <input type="submit" class="btn btn-primary" ng-click="submit();" name="submit" id="submit"  class="form-control btn btn-primary" value="Make Payment">
+                </div>
+            </div>
+      </div>
+</body>
+</html>

@@ -98,9 +98,6 @@ app.get('/showProductDetails', product.showProductDetails);
 app.get('/showProducts',product.showProducts);
 app.get('/getProducts', product.getProducts);
 
-mongo.connect(mongoSessionConnectURL, function(){
-	console.log('Connected to mongo at: ' + mongoSessionConnectURL);
-	http.createServer(app).listen(app.get('port'), function(){
-		console.log('Express server listening on port ' + app.get('port'));
-	});  
-});
+http.createServer(app).listen(app.get('port'), function(){
+	  console.log('Express server listening on port ' + app.get('port'));
+	});
