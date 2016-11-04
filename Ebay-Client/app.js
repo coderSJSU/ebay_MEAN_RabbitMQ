@@ -21,6 +21,7 @@ var mongoSessionConnectURL = "mongodb://localhost:27017/login";
 var expressSession = require("express-session");
 var mongoStore = require("connect-mongo")(expressSession);
 var mongo = require("./routes/mongo");
+var MongoStore = require('connect-mongo')(express);
 
 var mocha = new Mocha({
     ui: "tdd",
@@ -36,11 +37,13 @@ mocha.addFile("./public/tests/test.js");
   });
 });*/
 
-app.use(clientSession({
-	cookieName: 'session',
+app.use(expressSession({
 	secret: 'cmpe273_teststring',
+	resave:false,
+	saveUninitialized: false,
 	duration: 30 * 60 * 1000,    
-	activeDuration: 5 * 60 * 1000
+	activeDuration: 5 * 60 * 1000,
+	store: new mongoStore({ url: mongoSessionConnectURL })
 }));
 
 // all environments

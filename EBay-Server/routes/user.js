@@ -100,6 +100,8 @@ exports.loggedIn = function(req, res){
     			if(user != null){
     				console.log("user exists");
     				res.statusCode ="401";
+    				console.log("res: " + res.statusCode);
+        			callback(null, res);
 					//res.send(json_responses);
     			}	
     			else{	
@@ -112,18 +114,26 @@ exports.loggedIn = function(req, res){
 		    		}, function(err, user){
 		    			console.log("user3-- "+user.insertedIds);
 		    			if(err){
+		    				console.log("got error" + err);
 		    				res.statusCode ="402";
+		    				console.log("res: " + res.statusCode);
+		        			callback(null, res);
 		    			}
 		    			else
 		    			{
 		    				//req.session.last_ts = "";
+		    				
 		    				res.user_id = user.insertedIds,
+		    				console.log("passed1");
 		    				res.first_nm = firstName ;
+		    				console.log("passed2");
 		    				res.statusCode ="200";
+		    				console.log("passed3");
+		    				console.log("res: " + res.statusCode);
+		        			callback(null, res);
 		    			}
 		    		});
     			}
-    			callback(null, res);
     		});
     	});       
 		
@@ -166,12 +176,12 @@ function registerOld(req,res)
 }
 
 function checkUser(msg, callback){
-	var email_id = msg.email;
+	var email_id = msg.email_id;
 	var password = msg.password;
 	var res = {};
-	console.log("In checkuser:"+ msg.email_id);
-	password = encrypt(password);
 	
+	password = encrypt(password);
+	console.log("In checkuser:"+ msg.email_id+" " +password);
 	var json_responses;
 //	var queryString = 'SELECT cust_id, first_nm, DATE_FORMAT(last_login_ts,\'%b %d %Y %h:%i %p\') as date  FROM datahub.customer WHERE email_id = ? and pass = ? ';
 
@@ -202,6 +212,7 @@ function checkUser(msg, callback){
 	    			"email": user.email,
 	    			"password":user.password ,
 	    			"tel": user.tel,
+	    			"bought":[],
 	    			"date":new Date()
 	    		}, function(err, user){
 	    			if(err){

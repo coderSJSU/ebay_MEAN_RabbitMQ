@@ -50,15 +50,13 @@ $scope.init = function productDetails() {
 				"prodId" : prodId
 			}
 		}).success(function(data, prodId) {
-			if (data.statusCode == 401) {
-			}
-			else if (data.statusCode == 402) {
-			}
+			if (data.statusCode == 401) 
+				alert("Some error occurred. Please try again.");
+			else if (data.statusCode == 402) 
+				alert("Some error occurred. Please try again.");
 			else
-				{
 				alert("bid submitted");
-				window.location.assign("/loggedIn");
-				}
+			window.location.assign("/loggedIn");
 		}).error(function(error) {
 		});
 	};

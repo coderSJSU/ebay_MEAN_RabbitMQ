@@ -72,46 +72,221 @@ cnn.on('ready', function(){
 		});
 	});
 	
+	cnn.queue('add_bid_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			trans.addBid(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	
+	cnn.queue('addToCart_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			trans.addToCart(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	
+	
+	cnn.queue('productQuantity_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			trans.getProductQuanity(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	
+	cnn.queue('getCart_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			trans.getCart(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	
+	cnn.queue('productDetails_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			product.productDetails(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	
+	cnn.queue('getProducts_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			product.getProducts(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	cnn.queue('getBrands_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			product.getBrands(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	cnn.queue('addProduct_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			product.addProduct(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	cnn.queue('forSale_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			profile.getItemsForSale(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	cnn.queue('bought_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			profile.getItemsBought(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	cnn.queue('userInfo_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			profile.getUserInfo(message, function(err,res){
+				//return index sent
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	cnn.queue('saveProfile_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			profile.saveProfile(message, function(err,res){
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	cnn.queue('cartAmount_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			trans.getCartAmount(message, function(err,res){
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	cnn.queue('removeFromCart_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			trans.removeFromCart(message, function(err,res){
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
 });
 
-app.get('/', home.signin);
-app.get('/cart', home.getCart);
-
-
-app.get('/users', user.list);
-app.get('/signin', home.signin);
-app.get('/sell', index.sell);
-app.get('/loggedIn', user.loggedIn);
-
-app.post('/checkUser', user.checkUser)
-app.post('/register', user.register)
-app.get('/productsPage', product.showProducts)
-app.post('/addBid', trans.addBid)
-app.post('/productDetails', product.productDetails)
-app.get('/quickCheckout', product.paymentNow)
-app.get('/prodDescription', product.prodDescription)
-app.post('/addProduct', product.addProduct)
-app.get('/signOut', user.signOut)
-app.post('/addToCart', trans.addToCart)
-app.post('/getCart', trans.getCart)
-app.post('/getCartAmount', trans.getCartAmount)
-app.post('/getAmount', trans.getAmount)
-app.post('/removeFromCart', trans.removeFromCart)
-app.get('/sold', trans.sold)
-app.post('/emptyCart', trans.emptyCart)
-app.post('/payment1', trans.payment1);
-app.get('/payment2' , home.payment2);
-app.get('/paymentGateway', home.paymentGateway);
-app.get('/urgentPayment', home.urgentPayment);
-app.post('/getProductQuanity', trans.getProductQuanity);
-app.get('/profile', index.profile);
-app.post('/getItemsForSale', profile.getItemsForSale);
-app.get('/getItemsBought', profile.getItemsBought);
-app.get('/getUserInfo', profile.getUserInfo);
-app.post('/saveProfile', profile.saveProfile);
-app.get('/showProductDetails', product.showProductDetails);
-app.get('/showProducts',product.showProducts);
-app.get('/getProducts', product.getProducts);
 
 mongo.connect(mongoSessionConnectURL, function(){
 	console.log('Connected to mongo at: ' + mongoSessionConnectURL);

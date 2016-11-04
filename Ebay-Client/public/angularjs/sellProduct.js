@@ -1,20 +1,13 @@
-var prodRedirect = angular.module('prodRedirect', []);
+var sellProduct = angular.module('sellProduct', []);
 //defining the login controller
-prodRedirect.controllers
+sellProduct.controllers
 
-prodRedirect.controller('prodRedirect', function($scope, $http) {
-$scope.productsPage = function(cat) {
-	window.location.assign("/productsPage?cat="+cat);
-}
-
-$scope.displayProductOld = function(prod_id) {
-	window.location.assign("/productDetails?prod_id="+prod_id);
-}
+sellProduct.controller('sellProduct', function($scope, $http) {
 
 $scope.init = function initProducts() {
 	$http({
 		method : "GET",
-		url : '/getProducts',
+		url : '/prodDescription',
 		data : {
 		}
 	}).success(function(data) {
@@ -38,42 +31,6 @@ $scope.init = function initProducts() {
 };
 
 $scope.init();
-
-$scope.displayProduct = function(prod_id) {
-	$http({
-		method : "GET",
-		url : '/productDetails',
-		data : {
-			"prod_id" : prod_id
-		}
-	}).success(function(data) {
-		//checking the response data for statusCode
-		if (data.statusCode == 401) {
-		}
-		else if (data.statusCode == 402) {
-		}
-		else if(data.statusCode ==405){
-			alert("login first to continue");
-			window.location.assign("/signIn");
-		}
-		else
-			{//json_responses = {"statusCode" : 200 ,username:req.session.first_nm, data:products, customer_id: customer_id};
-				window.location.assign("/showProductDetails?prod_id="+prod_id);
-			}
-			//Making a get call to the '/redirectToHomepage' API
-			//window.location.assign("/homepage"); 
-	}).error(function(error) {
-		$scope.validlogin = true;
-		$scope.invalid_login = true;
-	});
-	
-	
-	
-	window.location.assign("/productDetails?prod_id="+prod_id);
-}
-
-
-
 
 $scope.addProduct = function() {
 	if($scope.selectedBrand == undefined || $scope.selectedBrand==null || $scope.selectedBrand=="")
@@ -127,6 +84,5 @@ $scope.addProduct = function() {
 	});
 	}
 }
-
 	
 })

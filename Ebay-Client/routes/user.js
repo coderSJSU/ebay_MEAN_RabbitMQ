@@ -86,17 +86,11 @@ exports.loggedIn = function(req, res){
 		var password = req.param("password");
 		logger.event("new user registration", { email: email, first_name: firstName});
 		
-		password = encrypt(password);
+		//password = encrypt(password);
 		var json_responses;
 		var tel = req.param("tel");
 		
 		var post  = {first_nm: firstName, last_nm : lastName, email_id: email, pass: password, tel:tel };
-		var insertUser="insert into customer set first_nm =? , last_nm =? , email_id = ?, pass = ?, tel = ?, last_login_ts = CURRENT_TIMESTAMP";
-		
-		var firstName = req.param("firstname");
-		var lastName = req.param("lastname");
-		var email = req.param("email");
-		var password = req.param("password");
 		logger.event("new user registration", { email: email, first_name: firstName});
 		var msg_payload = { "email": email, "password": password, "firstname": firstName, "lastname": lastName,"tel":tel};
 		mq_client.make_request('register_queue',msg_payload, function(err,results){
@@ -107,14 +101,14 @@ exports.loggedIn = function(req, res){
 			}
 			else 
 			{
-				console.log("inside success");
+				console.log("inside success results " + results);
 				if(results.statusCode == 200){
 					console.log("valid registration");
 					
 					req.session.last_ts = "";
     				req.session.user_id = results.user_id;
     				req.session.first_nm = results.first_nm ;
-					json_xxresponses = {"statusCode" : 200};
+					json_responses = {"statusCode" : 200};
 					res.send(json_responses);
 					//res.send({"login":"Success"});
 				}
@@ -124,48 +118,6 @@ exports.loggedIn = function(req, res){
 				}
 			}  
 		});
-		
-		
-		/*mongo.connect(mongoURL, function(){
-    		console.log('Connected too mongo at: ' + mongoURL + "name: " + req.body.name);
-    		var coll = mongo.collection('login');
-    		coll.findOne({
-    			"email": email
-    		}, function(err, user){
-    			if(user != null){
-    				console.log("user exists");
-    				json_responses = {"statusCode" : 401};
-					res.send(json_responses);
-    			}	
-    			else{	
-		    		coll.insert({
-		    			"firstName": firstName,
-		    			"lastName": lastName,
-		    			"email": email,
-		    			"password":password ,
-		    			"tel": tel
-		    		}, function(err, user){
-		    			console.log("user-- "+user);
-		    			console.log("user2-- "+user._id);
-		    			console.log("user1-- "+user["_id"]);
-		    			console.log("user3-- "+user.insertedIds);
-		    			if(err){
-		    					json_responses = {"statusCode" : 402};
-		    					res.send(json_responses);
-		    			}
-		    			else
-		    			{
-		    				req.session.last_ts = "";
-		    				req.session.user_id = user.insertedIds;
-		    				req.session.first_nm = firstName ;
-		    				json_responses = {"statusCode" : 200};
-		    				res.send(json_responses);
-		    			}
-		    		});
-    			}
-    		});
-    	});       */
-		
 	}	
 	
 function registerOld(req,res)

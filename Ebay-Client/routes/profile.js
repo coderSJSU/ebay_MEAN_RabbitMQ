@@ -4,6 +4,7 @@ var mongo = require("./mongo");
 var mongoURL = "mongodb://localhost:27017/test";
 ObjectID = require('mongodb').ObjectID;
 var winston = require('winston');
+var mq_client = require('../rpc/client');
 
 var myCustomLevels = {
 	    levels: {
@@ -22,19 +23,31 @@ function getItemsForSale(req, res){
 	
 	var cust_id = req.session.user_id;
 	var json_responses;
-	var queryString = 'select p.prod_id , p.label, p.description, p.brand as brand_id,  ' + 
-	'(select b.label from brand b where b.brand_id = p.brand)  brand, p.quantity '+ 
-  ' from product p where p.seller_id =' + cust_id+ '';
 	
 	if(cust_id == undefined){
 		json_responses = {"statusCode" : 405};
 		res.send(json_responses);
 	}
 	else{
-		mongo.connect(mongoURL, function(){
+		var msg_payload = {"seller_id":cust_id};
+		mq_client.make_request('forSale_queue',msg_payload, function(err,results){
+			console.log(results.products);
+			console.log("inside success");
+			if(results.statusCode == "200"){
+				json_responses = {"statusCode" : 200, "data": results.products};
+				res.send(json_responses);
+			}
+			else {    
+				json_responses = {"statusCode" : 401};
+				res.send(json_responses);
+			}  
+		});
+		
+		
+		/*mongo.connect(mongoURL, function(){
 			console.log('Connected too mongo at: ' + mongoURL );
 			var coll = mongo.collection('product');
-			coll.find({"seller_id":cust_id}).toArray(function(err, products){
+			coll.find({	}).toArray(function(err, products){
 				if(err){
 					json_responses = {"statusCode" : 401};
 					res.send(json_responses);
@@ -45,7 +58,7 @@ function getItemsForSale(req, res){
     				res.send(json_responses);
     			}
 		    		});
-		});
+		});*/
 	}
 }
 
@@ -88,7 +101,30 @@ function getItemsBought(req, res){
 		res.send(json_responses);
 	}
 	else{
-		mongo.connect(mongoURL, function(){
+		var msg_payload = {"cust_id":cust_id};
+		mq_client.make_request('bought_queue',msg_payload, function(err,results){
+			
+			console.log(results.products);
+			if(err){
+				json_responses = {"statusCode" : 401};
+				res.send(json_responses);
+			}
+			else 
+			{
+				console.log("inside getItemsBought success");
+				if(results.statusCode == "200"){
+					json_responses = {"statusCode" : 200, "data": results.products};
+    				res.send(json_responses);
+				}
+				else {    
+					json_responses = {"statusCode" : 401};
+					res.send(json_responses);
+				}
+			}  
+		});
+		
+		
+		/*mongo.connect(mongoURL, function(){
 			console.log('Connected too mongo at: ' + mongoURL );
 			var coll = mongo.collection('sales');
 			coll.find({"user_id":cust_id}).toArray(function(err, products){
@@ -102,7 +138,7 @@ function getItemsBought(req, res){
     				res.send(json_responses);
     			}
     		});
-		});
+		});*/
 	}
 }
 
@@ -142,15 +178,29 @@ function getUserInfo(req, res){
 	var cust_id = req.session.user_id;
 	var json_responses;
 	
-	var queryString = 'SELECT c.first_nm, c.last_nm, c.email_id, c.month, c.day, c.year, ca.address, ca.city, ca.country ' +
-		' FROM customer c left join customer_add ca on ca.customer_id = c.cust_id where c.cust_id =' + cust_id+ '';	
-	
 	if(cust_id == undefined){
 		json_responses = {"statusCode" : 405};
 		res.send(json_responses);
 	}
 	else{
-		mongo.connect(mongoURL, function(){
+		
+		var msg_payload = { "cust_id": cust_id};
+		mq_client.make_request('userInfo_queue',msg_payload, function(err,results){
+		console.log(results);
+		console.log("inside userInfo_queue success");
+		if(results.statusCode == "200"){
+			console.log("got user info");
+			
+			json_responses = {"statusCode" : 200, "data": results.user};
+			res.send(json_responses);
+		}
+		else {    
+			json_responses = {"statusCode" : 401};
+			res.send(json_responses);
+		}
+		});
+		
+		/*mongo.connect(mongoURL, function(){
 			console.log('Connected too mongo at: ' + mongoURL + " cust_id: " + cust_id);
 			var obj_id = new ObjectID(cust_id);
 			console.log("obj_id: " + obj_id);
@@ -170,7 +220,7 @@ function getUserInfo(req, res){
 					res.send(json_responses);
 				}
 		    		});
-		});		
+		});	*/	
 	}
 }
 
@@ -218,9 +268,37 @@ function saveProfile(req,res)
 	var first_nm = req.param("first_nm");
 	var	last_nm = req.param("last_nm");
 	var email_id = req.param("email_id");
-	var obj_id = new ObjectID(cust_id);
-	console.log("obj_id: " + obj_id);
-	var post  = {day: day, year : year, address: address, city: city, country:country,month:month};
+	var msg_payload = { "cust_id":cust_id, "first_nm": first_nm,
+			"last_nm": last_nm,
+			"email_id": email_id,
+			"month":month ,
+			"day": day,
+			"year": year,
+			"address":address,
+			"city":city,
+			"country":country};
+	if(cust_id == undefined){
+		json_responses = {"statusCode" : 405};
+		res.send(json_responses);
+	}
+	else{
+		mq_client.make_request('saveProfile_queue',msg_payload, function(err,results){
+			
+			console.log(results);
+			var json_responses;
+			if(results.statusCode != "200"){
+				json_responses = {"statusCode" : 402};
+				res.send(json_responses);
+			}
+			else
+			{
+				logger.event("profile updated", { user: cust_id});
+				json_responses = {"statusCode" : 200};
+				res.send(json_responses);
+			}
+		});
+	}
+	/*var post  = {day: day, year : year, address: address, city: city, country:country,month:month};
 	mongo.connect(mongoURL, function(){
 		console.log('Connected too mongo at: ' + mongoURL );
 		var coll = mongo.collection('login');
@@ -248,7 +326,7 @@ function saveProfile(req,res)
 						res.send(json_responses);
 					}
 				});
-	}); 
+	}); */
 }
 
 

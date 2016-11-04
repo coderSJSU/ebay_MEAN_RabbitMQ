@@ -18,34 +18,10 @@ var logger = new (winston.Logger)({
     transports: [new winston.transports.File({filename: 'F:/lib/event.log'})]
   }); 
 
-function productDetails(req, res){
-	
-//	var prod_id = req.param("prod_id");
-	var prod_id = req.session.prod_id
-	req.session.prod_id = "";
-	//var finalData = JSON.parse(data);
-	//var prod_id = finalData.prod_id
+function productDetails(msg, callback){
+	var res = {};
+	var prod_id = msg.prod_id
 	console.log("product_id" + prod_id );
-	var customer_id = req.session.user_id;
-	var post  = [customer_id, prod_id];
-	var json_responses;
-	
-	if(customer_id == undefined){
-		res.render('signin',function(err, result) {
-			// render on success
-			if (!err) {
-			res.end(result);
-			}
-			// render or error
-			else {
-			res.end('An error occurred');
-			console.log(err);
-			}
-			});
-	}
-	else{
-	
-	var queryString ='' ;
 	
 	mongo.connect(mongoURL, function(){
 		console.log('Connected too mongo at: ' + mongoURL + " prod_id: " + prod_id);
@@ -55,30 +31,22 @@ function productDetails(req, res){
 		coll.findOne({"_id":obj_id}, function(err, products){
 			if(err){
 				console.log("error: " + err);
-	    				json_responses = {"statusCode" : 401};
-	    				res.send(json_responses);
+	    				res.statusCode = "401";
+	    				callback(null, res);
 	    			}
 			else if(products != null)
     			{
 				console.log(JSON.stringify(products));
-				var winner = 0;
-				if(products.bid != null){
-					if(products.bid.customer_id != null){
-						if(customer_id == products.bid.customer_id)
-							winner = 1
-					}
-				}	
-				//logger.event("product checked", { user_id: customer_id, product:prod_id, description:results[0].description, brand: results[0].brand, label: results[0].label });
-				json_responses = {"statusCode" : 200 ,username:req.session.first_nm, data:products, customer_id: customer_id, winner:winner};
-				res.send(json_responses);
-	    			}
+				res.statusCode = "200";
+				res.products = products;
+				callback(null, res);
+    			}
 			else{
-				json_responses = {"statusCode" : 402};
-				res.send(json_responses);
+				res.statusCode = "401";
+				callback(null, res);
 			}
-	    		});
+		});
 	});
-	}
 }
 
 function showProductDetails(req, res){
@@ -181,13 +149,11 @@ function showProducts(req, res){
 			});
 }
 
-function getProducts(req, res){
+function getProducts(msg, callback){
 	
-	var cust_id = req.session.user_id;
-	//var cat_id = req.query.cat;
-	var cat_id  = req.session.type;
-	req.session.type = "";
-	var json_responses;
+	var cust_id = msg.cust_id;
+	var cat_id  = msg.cat_id;
+	var res = {};
 	
 	mongo.connect(mongoURL, function(){
 		console.log('Connected too mongo at: ' + mongoURL );
@@ -195,15 +161,15 @@ function getProducts(req, res){
 		coll.find({"category_id":cat_id, "seller_id": {$ne: cust_id}}).toArray(function(err, products){
 			if(err){
 						console.log("error: " + err);
-	    				json_responses = {"statusCode" : 401};
-	    				res.send(json_responses);
+						res.statusCode = "401";
+						callback(null, res);
 	    			}
 	    			else
 	    			{
-	    				logger.event("category checked", { user_id: cust_id, category:cat_id, data: products});
 	    				console.log("products: " + products);
-	    				json_responses = {"statusCode" : 200, results: products};
-	    				res.send(json_responses);
+	    				res.products = products;
+	    				res.statusCode = "200";
+						callback(null, res);
 	    			}
 	    		});
 	});
@@ -277,81 +243,47 @@ else
 },queryString,cust_id);
 }
 
-function prodDescription(req, res){
+function getBrands(msg, callback){
 	
-	var cust_id = req.session.user_id;
-	var cust_id = 1;
-	var type = req.query.type;
-	
-	var json_responses ;
-	//var queryString = 'select * from brand where category_id = '+type+'';
-	req.session.cat_id = type;
+	var res = {};
+	var type = msg.category;
 	mongo.connect(mongoURL, function(){
 		console.log('Connected too mongo at: ' + mongoURL );
 		var coll = mongo.collection('brand');
 		coll.find({"category":parseInt(type)}).toArray(function(err, brands){
 			if(err){
-				json_responses = {"statusCode" : 401};
-				res.send(json_responses);
-				res.end('An error occurred');
-				console.log("products: " + err);
+				res.statusCode= "401";
+				console.log("error: " + err);
+				callback(null, res);
     			}
     			else
     			{
-    				logger.event("category checked", { user_id: cust_id, category:type});
+    				console.log("brands: " + brands);
     				
-    				console.log("products: " + brands);
-    				
-    				ejs.renderFile('./views/sellProduct.ejs', {  username:req.session.first_nm, data:brands, user_id: cust_id},function(err, result) {
-    					if (!err) {
-    						res.end(result);
-    						}
-    						else {
-    						res.end('An error occurred');
-    						console.log(err);
-    						}
-						});
+    				res.statusCode= "200";
+    				res.brands= brands;
+    				callback(null, res);
 	    			}
 	    		});
 	});
 }
 
-function addProduct(req,res)
+function addProduct(msg, callback)
 {
-	var json_responses;
-	var cust_id = req.session.user_id;
-	if(cust_id == undefined){
-	json_responses = {"statusCode" : 405};
-	res.send(json_responses);
-	}
-	else{
-		
-	//var cust_id = req.session.cust_id;
-	var label = req.param("label");
-	var desc = req.param("desc");
-	var quantity = req.param("quantity");
-	var brand = req.param("brand");
-	var price = req.param("price");
-	var condition = req.param("condition");
-	var is_auction = req.param("is_auction");
-	var is_fixed = req.param("is_fixed");
-	var freeShip = req.param("freeShip");
-	var ship_price = '5';
-	if(freeShip)
-		ship_price = '0';
-	
-	if(is_auction == '1'){
-		price = '0';
-		quantity = '1';
-	}
-	var startingPrice = req.param("startingPrice");
-	if(is_auction == '0')
-		startingPrice = '0';
-	var category_id = req.session.cat_id;
-	//var post  = {label: label, description : desc, brand: brand, quantity: quantity, price:price,seller_id:cust_id, condition: condition,is_auction:is_auction,is_fixed:is_fixed,start_price:startingPrice,category_id:category_id, ship_price: ship_price };
-	
+	var res = {};
+	var cust_id = msg.seller_id;
+	var label = msg.label;
+	var desc = msg.description;
+	var quantity = msg.quantity;
+	var brand = msg.brand;
+	var price = msg.price;
+	var condition = msg.condition;
+	var is_auction = msg.is_auction;
+	var is_fixed = msg.is_fixed;
+	var category_id = msg.category_id;
+	var start_price = msg.start_price;
 	mongo.connect(mongoURL, function(){
-		console.log('Connected too mongo at: ' + mongoURL + "name: " + req.body.name);
+		console.log('Connected too mongo at: ' + mongoURL + "label: " + label);
 		var coll = mongo.collection('product');
 	    		coll.insert({
 	    			"label": label,
@@ -363,9 +295,9 @@ function addProduct(req,res)
 	    			"condition":condition,
 	    			"is_auction":is_auction,
 	    			"is_fixed":is_fixed,
-	    			"start_price":startingPrice,
+	    			"start_price":start_price,
 	    			"category_id":category_id, 
-	    			"ship_price": ship_price,
+	    			"ship_price": msg.ship_price,
 	    			"bid":[],
 	    			"bidCount":0,
 	    			"add_ts":new Date()
@@ -373,81 +305,18 @@ function addProduct(req,res)
 	    			console.log("product -- "+product.insertedIds);
 	    			var json_responses;
 	    			if(err){
-	    				json_responses = {"statusCode" : 401};
-	    				res.send(json_responses);
+	    				res.statusCode = "401";
+	    				callback(null, res);
 	    			}
 	    			else
 	    			{
-	    				//req.session.last_ts = "";
-	    				//req.session.user_id = user.insertedIds;
-	    				logger.event("product for sale");
-	    				json_responses = {"statusCode" : 200};
-	    				res.send(json_responses);
+	    				console.log("product for sale");
+	    				res.statusCode = "200";
+	    				callback(null, res);
 	    			}
 	    		});
 	}); 
 }
-}
-
-
-function addProductOld(req,res)
-{
-	var json_responses;
-	var cust_id = req.session.user_id;
-	if(cust_id == undefined){
-	json_responses = {"statusCode" : 405};
-	res.send(json_responses);
-	}
-	else{
-		
-	//var cust_id = req.session.cust_id;
-	var label = req.param("label");
-	var desc = req.param("desc");
-	var quantity = req.param("quantity");
-	var brand = req.param("brand");
-	var price = req.param("price");
-	var condition = req.param("condition");
-	var is_auction = req.param("is_auction");
-	var is_fixed = req.param("is_fixed");
-	var freeShip = req.param("freeShip");
-	var ship_price = '5';
-	if(freeShip)
-		ship_price = '0';
-	
-	if(is_auction == '1'){
-		price = '0';
-		quantity = '1';
-	}
-	var startingPrice = req.param("startingPrice");
-	if(is_auction == '0')
-		startingPrice = '0';
-	var category_id = req.session.cat_id;
-	var post  = {label: label, description : desc, brand: brand, quantity: quantity, price:price,seller_id:cust_id, condition: condition,is_auction:is_auction,is_fixed:is_fixed,start_price:startingPrice,category_id:category_id, ship_price: ship_price };
-	var insertproduct="insert into datahub.product set ? ";
-mysql.insertqueryWithParams(function(err,results){
-if(err){
-throw err;
-}
-else
-{
-	var json_responses;
-	
-	if(err){
-		json_responses = {"statusCode" : 401};
-		res.send(json_responses);
-	}
-	else
-	{	
-		logger.event("product for sale", { user_id: cust_id, label:label, description:desc, brand:brand});
-		json_responses = {"statusCode" : 200};
-		res.send(json_responses);
-
-	}
-}
-},insertproduct, post);
-}
-}
-
 
 function paymentNow(req, res){
 	
@@ -487,7 +356,7 @@ function paymentNow(req, res){
 
 exports.paymentNow= paymentNow;
 exports.addProduct = addProduct;
-exports.prodDescription = prodDescription;
+exports.getBrands = getBrands;
 exports.showProducts = showProducts;
 exports.productDetails = productDetails;
 exports.showProductDetails = showProductDetails;

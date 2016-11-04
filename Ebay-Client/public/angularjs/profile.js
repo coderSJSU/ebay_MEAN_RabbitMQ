@@ -118,6 +118,10 @@ $scope.submit = function submit() {
 		if (data.statusCode == 200 ) {
 			alert("Details Updated");
 		}
+		else if (data.statusCode == 405) {
+			alert("Login First to update profile");
+			window.location.assign("/signin");
+		}
 		else
 			{
 			alert("Error updating customer details. Please try again");

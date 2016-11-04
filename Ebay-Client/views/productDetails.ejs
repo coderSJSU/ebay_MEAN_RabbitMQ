@@ -53,13 +53,16 @@
 					</div>
 					<div class="col-sm-3">
 					</div>
-					<div ng-if= "data.is_auction === 1" >
+					<div ng-if= "data.is_auction === '1'" >
 						<div class="col-sm-6">
 							<div ng-if= "diff === 4" >
 								Last Day to bid
 							</div>	
 							<div ng-if= "diff < 4" >	
 						  		{{remainingDays}}d left
+						  	</div>
+						  	<div ng-if= "diff > 4" >	
+						  		Bidding expired
 						  	</div>
 						</div>
 					</div>	
@@ -77,7 +80,7 @@
 			<div class="row">
 				<div class="col-sm-5">
 					<div class="row">
-						<div ng-if= "data.is_auction === 1" >
+						<div ng-if= "data.is_auction === '1'" >
 							<div ng-if= "diff < 5" >
 								<div class="col-sm-6">
 									<input type="text" class="form-control" style="text-align: right;" id="bidAmount" ng-model ="bidAmount" >
