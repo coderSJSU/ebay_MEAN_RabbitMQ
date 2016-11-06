@@ -22,7 +22,7 @@ $scope.init = function() {
 			var total = 0;
 			var current = 0;
 			for(var i=0; i < results.length; i++){
-				current = (parseInt(results[i].price) + parseInt(results[i].ship_price))*parseInt(results[i].quantity);
+				current = (parseInt(results[i].price) + parseInt(results[i].deliveryPrice))*parseInt(results[i].quantity);
 				total = parseInt(total) + current;
 			}
 			$scope.total = total;

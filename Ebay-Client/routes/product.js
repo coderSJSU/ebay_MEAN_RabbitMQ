@@ -1,8 +1,4 @@
 var ejs = require("ejs");
-var mysql = require('./mysql');
-var mongo = require("./mongo");
-var mongoURL = "mongodb://localhost:27017/test";
-ObjectID = require('mongodb').ObjectID;
 var winston = require('winston');
 var mq_client = require('../rpc/client');
 
@@ -21,7 +17,7 @@ var logger = new (winston.Logger)({
 
 function productDetails(req, res){
 	var prod_id = req.session.prod_id
-	req.session.prod_id = "";
+	//req.session.prod_id = "";
 	console.log("product_id" + prod_id );
 	var customer_id = req.session.user_id;
 	var json_responses;
@@ -74,37 +70,6 @@ function productDetails(req, res){
 			}  
 		});
 	
-	/*mongo.connect(mongoURL, function(){
-		console.log('Connected too mongo at: ' + mongoURL + " prod_id: " + prod_id);
-		var obj_id = new ObjectID(prod_id);
-		console.log("obj_id: " + obj_id);
-		var coll = mongo.collection('product');
-		coll.findOne({"_id":obj_id}, function(err, products){
-			if(err){
-				console.log("error: " + err);
-	    				json_responses = {"statusCode" : 401};
-	    				res.send(json_responses);
-	    			}
-			else if(products != null)
-    			{
-				console.log(JSON.stringify(products));
-				var winner = 0;
-				if(products.bid != null){
-					if(products.bid.customer_id != null){
-						if(customer_id == products.bid.customer_id)
-							winner = 1
-					}
-				}	
-				//logger.event("product checked", { user_id: customer_id, product:prod_id, description:results[0].description, brand: results[0].brand, label: results[0].label });
-				json_responses = {"statusCode" : 200 ,username:req.session.first_nm, data:products, customer_id: customer_id, winner:winner};
-				res.send(json_responses);
-	    			}
-			else{
-				json_responses = {"statusCode" : 402};
-				res.send(json_responses);
-			}
-	    		});
-	});*/
 	}
 }
 
@@ -286,7 +251,8 @@ function addProduct(req, res)
 
 function paymentNow(req, res){
 	
-	var prod_id = req.query.prod_id;
+	var prod_id = req.session.prod_id;
+	console.log("req.session.prod_id"+req.session.prod_id);
 	var customer_id = req.session.user_id;
 	var json_responses;
 	

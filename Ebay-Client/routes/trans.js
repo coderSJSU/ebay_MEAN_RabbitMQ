@@ -1,5 +1,4 @@
 var ejs = require("ejs");
-var mysql = require('./mysql');
 var winston = require('winston');
 var mongo = require("./mongo");
 var mongoURL = "mongodb://localhost:27017/test";
@@ -64,30 +63,6 @@ function addBid(req, res){
 	}
 }
 
-function addBidOld(req, res){
-	
-	// check user already exists
-	var amount = req.param("amount");
-	var prodId = req.param("prodId");
-	var user_id = req.session.user_id;
-	var json_responses;
-	var post  = {bid_amount: amount, product_id : prodId, customer_id: user_id};
-	var addBid="insert into bid set ? ";
-	var json_responses;
-	mysql.insertqueryWithParamsReturnData(function(err,results, post){
-		if(err){
-			json_responses = {"statusCode" : 401};
-			res.send(json_responses);
-		}
-		else
-		{	
-			bidLogger.bid("bid submitted",{ user: user_id, product_id: prodId, amount: amount});
-			json_responses = {"statusCode" : 200, "id":results.insertId, "post": post};
-			res.send(json_responses);
-		}
-		},addBid, post);
-}
-
 function addToCart(req, res){
 	
 	// check user already exists
@@ -95,7 +70,6 @@ function addToCart(req, res){
 	var finalData = JSON.parse(data);
 	var user_id = req.session.user_id;
 	
-	var json_responses;
 	var json_responses;
 	if(user_id == undefined){
 		json_responses = {"statusCode" : 405};
@@ -229,22 +203,6 @@ function removeFromCart(req, res){
 	}
 }
 
-
-function deleteFromCart(err,results, post){
-	mysql.deleteData(function(err,results, post){
-		if(err){
-			json_responses = {"statusCode" : 401};
-			res.send(json_responses);
-		}
-		else
-		{	
-			console.log(post);
-				json_responses = {"statusCode" : 200};
-				res.send(json_responses);
-		}
-		},deleteItem, '');
-}
-
 function payment1(req, res){
 	
 	var cust_id = req.session.user_id;
@@ -349,177 +307,62 @@ exports.getProductQuanity = function(req, res){
 		}  
 	});
 	
-	/*var obj_id = new ObjectID(finalData.prod_id);
-	mongo.connect(mongoURL, function(){
-		console.log('Connected too mongo at: ' + mongoURL + "product_id   :" + finalData.prod_id );
-		var coll = mongo.collection('product');
-		coll.findOne({"_id":obj_id},{"quantity":1},function(err, product){
-			if(err){
-				json_responses = {"statusCode" : 401};
-				res.send(json_responses);
-			}
-			else
-			{
-				if(product!=null)
-				json_responses = {"statusCode" : 200, "quantity": product.quantity};
-				else
-					json_responses = {"statusCode" : 200, "quantity": 0};
-				res.send(json_responses);
-			}
-		});
-	}); */
 };
 
-exports.getProductQuanityOld = function(req, res){
-	var data = req.param("data");
-	var finalData = JSON.parse(data);
-	var json_responses;
-	var queryString = 'select quantity ' +
-  ' from product where prod_id =' + finalData.prod_id+ '';
-	
-	mysql.fetchData(function(err,results){
-		if(err){
-			json_responses = {"statusCode" : 401};
-			res.send(json_responses);
-		}
-		else 
-		{
-			json_responses = {"statusCode" : 200, "data": results};
-			res.send(json_responses);
-		}
-		
-		},queryString,'');
-};
 
 function getAmount(req, res){
 	
 	prod_id = req.session.prod_id;
 	is_urgent = req.session.is_urgent;
-	//delete req.session['prod_id'];
 	delete req.session['is_urgent'];
-	
+	console.log("p"+prod_id);
 	var cust_id = req.session.user_id;
 	var json_responses;
 
-	mongo.connect(mongoURL, function(){
-		console.log('Connected too mongo at: ' + mongoURL + "product_id   :" + finalData.prod_id );
-		var coll = mongo.collection('product');
-		coll.findOne({"prod_id":prod_id},{$group:{amount:{$max: "$amount"}}},function(err, product){
-			if(err){
+	var msg_payload = { "prod_id": prod_id};
+	mq_client.make_request('getAmount_queue',msg_payload, function(err,results){
+		
+		console.log(results);
+		if(results.statusCode!= "200"){
+			json_responses = {"statusCode" : 200};
+			res.send(json_responses);
+		}
+		else 
+		{
+			console.log("inside success");
+			if(results.statusCode == 200){
+				json_responses = {"statusCode" : 200, "bid": results.product};
+				res.send(json_responses);
+			}
+			else {    
 				json_responses = {"statusCode" : 401};
 				res.send(json_responses);
 			}
-			else
-			{
-				json_responses = {"statusCode" : 200, "bid": product};
-				res.send(json_responses);
-			}
-		});
+		}  
 	});
 	
-}	
-
-
-function getAmountOld(req, res){
 	
-	prod_id = req.session.prod_id;
-	is_urgent = req.session.is_urgent;
-	//delete req.session['prod_id'];
-	delete req.session['is_urgent'];
-	
-	var cust_id = req.session.user_id;
-	var json_responses;
-
-	var queryString = 'select max(bid_amount) as max'+ 
-	  ' from bid where product_id =' + prod_id+ '';
-		
-		if(cust_id == undefined){
-			json_responses = {"statusCode" : 405};
-			res.send(json_responses);
-		}
-		else{
-				mysql.fetchData(function(err,results){
-			if(err){
-				json_responses = {"statusCode" : 401};
-				res.send(json_responses);
-			}
-			else 
-			{
-				json_responses = {"statusCode" : 200, "bid": results};
-				res.send(json_responses);
-			}
-			
-			},queryString,'');
-		}
-	
-}	
-
-
-function soldOld(req, res){
-	var user_id = req.session.user_id;
-	prod_id = req.session.prod_id;
-	delete req.session['prod_id'];
-	
-	var cust_id = req.session.user_id;
-	var json_responses;
-
-	var post  = {customer_id: user_id, product_id : prod_id, quantity: "1"};
-	var addSale="insert into sales set ? ";
-	var json_responses;
-	mysql.insertqueryWithParamsReturnData(function(err,results, post){
-		if(err){
-			json_responses = {"statusCode" : 401};
-			res.send(json_responses);
-		}
-		else
-		{	
-			logger.event("product sold", { user: user_id, product: prod_id, quantity: "1"});
-				json_responses = {"statusCode" : 200, };
-				res.send(json_responses);
-		}
-		},addSale, post);
 }	
 
 function sold(req, res){
 	var user_id = req.session.user_id;
 	prod_id = req.session.prod_id;
 	delete req.session['prod_id'];
-	
 	var cust_id = req.session.user_id;
+	console.log("prod_id"+ prod_id);
 	var json_responses;
-
-	var post  = {customer_id: user_id, product_id : prod_id, quantity: "1"};
-	var addSale="insert into sales set ? ";
-	var json_responses;
-	var obj_id = new ObjectID(cust_id);
-	console.log("obj_id: " + obj_id);
-	mongo.connect(mongoURL, function(){
-		console.log('Connected too mongo at: ' + mongoURL );
-		var coll = mongo.collection('product');
-		coll.update({"_id":obj_id},{$push:{bought:{$each:[{"product":prod_id,"quantity":quantity}]}}}
-		),(function(err, products){
-			if(err){
-				console.log("error: " + err);
-	    				json_responses = {"statusCode" : 401};
-	    				res.send(json_responses);
-	    			}
-	    			else
-	    			{
-	    				logger.event("category checked", { user_id: cust_id, category:cat_id});
-	    				
-	    				console.log("products: " + products);
-	    				
-	    				ejs.renderFile('./views/products.ejs', {  username:req.session.first_nm, data:products, title:'EBay' },function(err, result) {
-	    					if (!err) {
-	    						res.end(result);
-	    						}
-	    						else {
-	    						res.end('An error occurred');
-	    						console.log(err);
-	    						}
-	    						});
-	    			}
-	    		});
+	var msg_payload = { "prod_id": prod_id, "cust_id": cust_id};
+	mq_client.make_request('instantBuy_queue',msg_payload, function(err,results){
+		console.log(results);
+		if(results.statusCode != "200"){
+			json_responses = {"statusCode" : 402};
+			res.send(json_responses);
+		}
+		else 
+		{
+			json_responses= {"statusCode" : 200};
+			res.send(json_responses);
+		}  
 	});
 }	
 

@@ -18,8 +18,9 @@ $scope.init = function() {
 		else
 			{
 			var bidAmount = 0;
-			if(data.bid.length> 0)
-				bidAmount = data.bid[0].max;
+			if(data.bid.bid !=null)
+				bidAmount = data.bid.bid.bid_amount;
+
 			else{
 				
 				alert("Some error occurred");

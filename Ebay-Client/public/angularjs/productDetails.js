@@ -75,7 +75,7 @@ $scope.init = function productDetails() {
 		}
 		else{
 		var dPrice = ship_price;
-		var cartData = JSON.stringify({ 'brand':brand,'label': label, 'price': price,'condition':canditions, 'deliveryPrice':dPrice, 'quantity':$scope.quantity, 'id':prod_id });
+		var cartData = JSON.stringify({ 'brand':brand,'label': label, 'price': price,'condition':canditions, 'deliveryPrice':dPrice, 'quantity':quantity, 'id':prod_id });
 		var dataToVerify = JSON.stringify({ 'prod_id':prod_id });
 		$http({
 			method : "POST",
@@ -94,6 +94,7 @@ $scope.init = function productDetails() {
 				{
 ////					var results = data.data;
 					var q = data.quantity;
+					console.log("In addtocart: data quantity on client" + quantity);
 					if(parseInt(data.quantity)>=parseInt(quantity))
 				{
 				$http({

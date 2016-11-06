@@ -4,6 +4,7 @@ var crypto = require('crypto');
 var mongo = require("./mongo");
 var mongoURL = "mongodb://localhost:27017/test";
 var winston = require('winston');
+var bcrypt = require('bcrypt-nodejs');
 
 var myCustomLevels = {
 	    levels: {
@@ -84,12 +85,10 @@ exports.loggedIn = function(req, res){
 		var email = msg.email;
 		var password = msg.password;
 		logger.event("new user registration", { email: email, first_name: firstName});
-		
-		password = encrypt(password);
-		var json_responses;
+		console.log("new user registration firstName:" + firstName +"lastName:" +lastName+"email:" +email+"password:" +password);
+		//password = encrypt(password);
 		var tel = msg.tel;
 		var res = {};
-		var post  = {first_nm: firstName, last_nm : lastName, email_id: email, pass: password, tel:tel };
 		logger.event("new user registration", { email: email, first_name: firstName});
 		mongo.connect(mongoURL, function(){
     		console.log('Connected too mongo at: ' + mongoURL + "name: " + msg.firstname);
@@ -109,8 +108,9 @@ exports.loggedIn = function(req, res){
 		    			"firstName": firstName,
 		    			"lastName": lastName,
 		    			"email": email,
-		    			"password":password ,
-		    			"tel": tel
+		    			"password":bcrypt.hashSync(password, null, null) ,
+		    			"tel": tel,
+		    			"date":new Date()
 		    		}, function(err, user){
 		    			console.log("user3-- "+user.insertedIds);
 		    			if(err){
@@ -121,8 +121,6 @@ exports.loggedIn = function(req, res){
 		    			}
 		    			else
 		    			{
-		    				//req.session.last_ts = "";
-		    				
 		    				res.user_id = user.insertedIds,
 		    				console.log("passed1");
 		    				res.first_nm = firstName ;
@@ -180,33 +178,28 @@ function checkUser(msg, callback){
 	var password = msg.password;
 	var res = {};
 	
-	password = encrypt(password);
+	//password = encrypt(password);
 	console.log("In checkuser:"+ msg.email_id+" " +password);
 	var json_responses;
-//	var queryString = 'SELECT cust_id, first_nm, DATE_FORMAT(last_login_ts,\'%b %d %Y %h:%i %p\') as date  FROM datahub.customer WHERE email_id = ? and pass = ? ';
-
 	mongo.connect(mongoURL, function(){
 		//console.log('Connected too mongo at: ' + mongoURL + "name: " + req.body.name);
 		var coll = mongo.collection('login');
 		coll.findOne({
-			"email": email_id, "password":password
+			"email": email_id//, "password":bcrypt.hashSync(password, null, null)
 		}, function(err, user){
-			console.log(user);
-			if(user != null){
+			console.log(user + "password: "+ password + "user.password" + user.password);
+			console.log(bcrypt.compareSync(password, user.password));
+			if(user != null || !bcrypt.compareSync(password, user.password)){
 				res.firstname = user.firstName;
 				res.lastname = user.lastName;
 				res.emailid = user.email;
 				res.user_id = user._id,
-				res.last_ts = user.last_ts,
+				res.date = user.date,
 				res.value = "Success Login";
 				res.code = "200";
 				console.log("user exists");
-				//req.session.user_id = user._id;
-				//req.session.first_nm = user.firstName;
-				//req.session.last_ts = user.date;
-				///console.log("inside : "+ req.session.user_id);
 	    		coll.save({
-	    			"user_id": user._id,
+	    			"_id": user._id,
 	    			"firstName": user.firstName,
 	    			"lastName": user.lastName,
 	    			"email": user.email,

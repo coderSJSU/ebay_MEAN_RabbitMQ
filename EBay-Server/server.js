@@ -285,9 +285,37 @@ cnn.on('ready', function(){
 			});
 		});
 	});
+	cnn.queue('instantBuy_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			trans.sold(message, function(err,res){
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
+	cnn.queue('getAmount_queue', function(q){
+		q.subscribe(function(message, headers, deliveryInfo, m){
+			util.log(util.format( deliveryInfo.routingKey, message));
+			util.log("register Message: "+JSON.stringify(message));
+			util.log("register DeliveryInfo: "+JSON.stringify(deliveryInfo));
+			trans.getAmount(message, function(err,res){
+				cnn.publish(m.replyTo, res, {
+					contentType:'application/json',
+					contentEncoding:'utf-8',
+					correlationId:m.correlationId
+				});
+			});
+		});
+	});
 });
 
 
-mongo.connect(mongoSessionConnectURL, function(){
+mongo.connectPool(mongoSessionConnectURL, function(){
 	console.log('Connected to mongo at: ' + mongoSessionConnectURL);
 });

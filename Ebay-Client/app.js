@@ -23,6 +23,11 @@ var mongoStore = require("connect-mongo")(expressSession);
 var mongo = require("./routes/mongo");
 var MongoStore = require('connect-mongo')(express);
 
+var passport = require('passport');
+require('./config/passport')(passport);
+
+//app.use(passport.initialize());// app.use(passport.session());
+
 var mocha = new Mocha({
     ui: "tdd",
     reporter: "spec"
@@ -71,8 +76,8 @@ app.get('/signin', home.signin);
 app.get('/sell', index.sell);
 app.get('/loggedIn', user.loggedIn);
 
-app.post('/checkUser', user.checkUser)
-app.post('/register', user.register)
+//app.post('/checkUser', user.checkUser)
+//app.post('/register', user.register)
 app.get('/productsPage', product.showProducts)
 app.post('/addBid', trans.addBid)
 app.post('/productDetails', product.productDetails)
@@ -104,3 +109,36 @@ app.get('/getProducts', product.getProducts);
 http.createServer(app).listen(app.get('port'), function(){
 	  console.log('Express server listening on port ' + app.get('port'));
 	});
+
+
+
+/*app.post('/signup', passport.authenticate('local-signup', { 
+	successRedirect : '/profile', 
+	failureRedirect : '/signup2',
+	failureFlash : true  }));*/
+
+
+app.post('/register', function(req, res, next) {
+	passport.authenticate('local-signup', function(err, data) {
+	console.log("after register" + data);
+	var json_responses
+	if(data == "error")
+		json_responses = {"statusCode" : 402};
+	else
+		json_responses = {"statusCode" : 200};
+	res.send(json_responses);
+	})(req, res, next)
+  }); 
+
+
+app.post('/checkUser', function(req, res, next) {
+	passport.authenticate('local-login', function(err, data) {
+	console.log("after auth");
+	var json_responses
+	if(data == "error")
+		json_responses = {"statusCode" : 402};
+	else
+		json_responses = {"statusCode" : 200};
+	res.send(json_responses);
+	})(req, res, next)
+  }); 	

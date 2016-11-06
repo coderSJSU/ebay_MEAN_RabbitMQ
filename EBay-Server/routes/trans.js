@@ -44,8 +44,8 @@ function addBid(msg, callback){
     			}
     			else
     			{
-    				console.log("2");
-    				if(amount > parseInt(prod.bid.bid_amount)){
+    				console.log("2" + prod.bid.bid_amount);
+    				if(prod.bid.bid_amount == null || prod.bid.bid_amount == undefined || amount > parseInt(prod.bid.bid_amount)){
     					console.log("3");
     					coll.update({"_id":obj_id},{$set:{bid:{
     						"bid_amount": amount, 
@@ -77,17 +77,17 @@ function addBid(msg, callback){
     				}
     				else
     					count = parseInt(prod.bidCount) + 1;
-    				console.log("count: " + (count+1));
     				coll.update({"_id":obj_id},
     				{$set: {bidCount: count}}		
     				);
+    				res.statusCode = "200";
+					callback(null, res);
     				}
     				else{
-    					res.value = "Success";
-    					res.code = "200";
+    					res.statusCode = "401";
+    					callback(null, res);
     				}
     			}
-			callback(null, res);
 	    		});
 	}); 
 }
@@ -95,7 +95,7 @@ function addBid(msg, callback){
 function addToCart(msg, callback){
 	
 	var res = {};
-	console.log("In addtocart:");
+	console.log("In addtocart: quantity" + msg.quantity);
 		mongo.connect(mongoURL, function(){
 			console.log('Connected too mongo at: ' + mongoURL + "user_id: " + msg.user_id);
 			var coll = mongo.collection('cart');
@@ -389,28 +389,26 @@ exports.getProductQuanity = function(msg, callback){
 };
 
 
-function getAmount(req, res){
+function getAmount(msg, callback){
 	
-	prod_id = req.session.prod_id;
-	is_urgent = req.session.is_urgent;
-	//delete req.session['prod_id'];
-	delete req.session['is_urgent'];
-	
-	var cust_id = req.session.user_id;
-	var json_responses;
-
+	prod_id = msg.prod_id;
+	var res = {};
+	var obj_id = new ObjectID(prod_id);
 	mongo.connect(mongoURL, function(){
-		console.log('Connected too mongo at: ' + mongoURL + "product_id   :" + finalData.prod_id );
+		console.log('Connected too mongo at: ' + mongoURL + "product_id   :" + msg.prod_id );
 		var coll = mongo.collection('product');
-		coll.findOne({"prod_id":prod_id},{$group:{amount:{$max: "$amount"}}},function(err, product){
+		coll.findOne({"_id":obj_id},{"bid":1,"_id":0},function(err, product){
 			if(err){
-				json_responses = {"statusCode" : 401};
-				res.send(json_responses);
+				console.log(err);
+				res.statusCode = "401";
+				callback(null, res);
 			}
 			else
 			{
-				json_responses = {"statusCode" : 200, "bid": product};
-				res.send(json_responses);
+				console.log(JSON.stringify(product));
+				res.statusCode = "200";
+				res.product = product;
+				callback(null, res);
 			}
 		});
 	});
@@ -478,46 +476,59 @@ function soldOld(req, res){
 		},addSale, post);
 }	
 
-function sold(req, res){
-	var user_id = req.session.user_id;
-	prod_id = req.session.prod_id;
-	delete req.session['prod_id'];
-	
-	var cust_id = req.session.user_id;
-	var json_responses;
+function sold(msg, callback){
+	var res = {};
+	var user_id = msg.cust_id;
+	var prod_id = msg.prod_id;
 
-	var post  = {customer_id: user_id, product_id : prod_id, quantity: "1"};
-	var addSale="insert into sales set ? ";
-	var json_responses;
-	var obj_id = new ObjectID(cust_id);
+	var obj_id = new ObjectID(prod_id);
 	console.log("obj_id: " + obj_id);
+	
 	mongo.connect(mongoURL, function(){
 		console.log('Connected too mongo at: ' + mongoURL );
 		var coll = mongo.collection('product');
-		coll.update({"_id":obj_id},{$push:{bought:{$each:[{"product":prod_id,"quantity":quantity}]}}}
-		),(function(err, products){
+		coll.find({"_id": obj_id}).forEach(function(prod, err){
 			if(err){
-				console.log("error: " + err);
-	    				json_responses = {"statusCode" : 401};
-	    				res.send(json_responses);
+				console.log("error: " + JSON.stringify(err));
+				res.statusCode = "402";
+				callback(null, res);
+    			}
+    			else
+    			{
+    				var obj_id = new ObjectID(user_id);
+    				console.log("cust: " + obj_id);
+    				coll = mongo.collection('login');
+    				coll.update({"_id":obj_id},{$push:{bought:{
+    					"prod_id": prod._id,
+    					"label": prod.label,
+    					"description": prod.description,
+    					"brand": prod.brand,
+    					"quantity":prod.quantity ,
+    					"price": prod.price,
+    					"condition":prod.condition,
+    					"category_id":prod.category_id, 
+    					"ship_price": prod.ship_price,
+						"add_ts":new Date()
+	    		}}}, function(err, cart){
+	    			var json_responses;
+	    			if(err){
+	    				res.statusCode = "402";
+	    				callback(null, res);
 	    			}
 	    			else
 	    			{
-	    				logger.event("category checked", { user_id: cust_id, category:cat_id});
-	    				
-	    				console.log("products: " + products);
-	    				
-	    				ejs.renderFile('./views/products.ejs', {  username:req.session.first_nm, data:products, title:'EBay' },function(err, result) {
-	    					if (!err) {
-	    						res.end(result);
-	    						}
-	    						else {
-	    						res.end('An error occurred');
-	    						console.log(err);
-	    						}
-	    						});
+	    				if(cart !=null){
+	    					res.statusCode = "200";
+	    					callback(null, res);
+	    				}
+	    				else
+	    					res.statusCode = "402";
+	    					callback(null, res);
 	    			}
 	    		});
+			
+    			}
+		});
 	});
 }	
 
