@@ -79,6 +79,10 @@ $scope.init = function init() {
 				alert("Login First to vew profile");
 				window.location.assign("/signin");
 			}
+			else if (data.statusCode == 500) {
+				alert("Some error occurred, Redirecting to login screen");
+				window.location.assign("/signin");
+			}
 			else
 				{
 				var results = data.data;
@@ -117,6 +121,14 @@ $scope.submit = function submit() {
 		//checking the response data for statusCode
 		if (data.statusCode == 200 ) {
 			alert("Details Updated");
+		}
+		else if (data.statusCode == 405) {
+			alert("Login First to update profile");
+			window.location.assign("/signin");
+		}
+		else if (data.statusCode == 500) {
+			alert("Some error occurred, Redirecting to login screen");
+			window.location.assign("/signin");
 		}
 		else
 			{

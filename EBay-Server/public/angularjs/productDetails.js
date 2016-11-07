@@ -50,15 +50,13 @@ $scope.init = function productDetails() {
 				"prodId" : prodId
 			}
 		}).success(function(data, prodId) {
-			if (data.statusCode == 401) {
-			}
-			else if (data.statusCode == 402) {
-			}
+			if (data.statusCode == 401) 
+				alert("Some error occurred. Please try again.");
+			else if (data.statusCode == 402) 
+				alert("Some error occurred. Please try again.");
 			else
-				{
 				alert("bid submitted");
-				window.location.assign("/loggedIn");
-				}
+			window.location.assign("/loggedIn");
 		}).error(function(error) {
 		});
 	};
@@ -77,7 +75,7 @@ $scope.init = function productDetails() {
 		}
 		else{
 		var dPrice = ship_price;
-		var cartData = JSON.stringify({ 'brand':brand,'label': label, 'price': price,'condition':canditions, 'deliveryPrice':dPrice, 'quantity':$scope.quantity, 'id':prod_id });
+		var cartData = JSON.stringify({ 'brand':brand,'label': label, 'price': price,'condition':canditions, 'deliveryPrice':dPrice, 'quantity':quantity, 'id':prod_id });
 		var dataToVerify = JSON.stringify({ 'prod_id':prod_id });
 		$http({
 			method : "POST",
@@ -92,10 +90,15 @@ $scope.init = function productDetails() {
 			else if (data.statusCode == 405) {
 				alert("Some error occurred, please login and try again");
 			}
+			else if (data.statusCode == 500) {
+				alert("Some error occurred, Redirecting to login screen");
+				window.location.assign("/signin");
+			}
 			else
 				{
 ////					var results = data.data;
 					var q = data.quantity;
+					console.log("In addtocart: data quantity on client" + quantity);
 					if(parseInt(data.quantity)>=parseInt(quantity))
 				{
 				$http({
@@ -109,6 +112,10 @@ $scope.init = function productDetails() {
 					}
 					else if (data.statusCode == 405) {
 						alert("Some error occurred, please login and try again");
+					}
+					else if (data.statusCode == 500) {
+						alert("Some error occurred, Redirecting to login screen");
+						window.location.assign("/signin");
 					}
 					else
 						{

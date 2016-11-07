@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="author" content="jpranjal">
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+	<link rel='stylesheet' href='/stylesheets/style.css' />
+	<script	src="/js/angular.min.js"></script>
+    <!-- Custom CSS -->
+    <link href="/stylesheets/business-casual.css" rel="stylesheet">
+	<script src="/angularjs/productDetails.js"></script>
+</head>
+
+<header>
+    <!-- Navigation -->
+    <%var user1 =  username %>
+     <%username = user1 %>
+    <% include header %>
+</header>
+
+<body ng-app="productDetails" ng-controller="productDetails">
+<br><br>
+<div class="row">
+  <div class="col-sm-2"></div>
+  <div class="col-sm-9">
+	<div class="panel">
+		<div class="panel-body">
+			<div class="row">
+				<div class="col-sm-9">
+				<label> <font style="font-weight: bold; font-size:x-large;">{{ data.brand }}: {{ data.label }}</font></label>
+				</div>
+			</div>
+			<br><br>
+			<div class="row">
+				<div class="col-sm-9">
+				<label> <font style="font-weight:normal ; font-size:large;"><b>Description:</b> {{ data.description }}</font></label>
+				</div>
+			</div><br>
+			<div class="row">
+				<div class="col-sm-9">
+				<label> <font style="font-weight:normal ; font-size:medium;"><b>Item condition:</b> {{ data.condition }}</font></label>
+				</div>
+			</div><br><br>
+			<div class="row">
+				<div class="col-sm-1">
+					<label  style="height:100%; min-height:10px; margin-top:5px; vertical-align:middle;  font-size:normal; font-weight: normal font-family: Helvetica neue,Helvetica,Arial,Sans-serif; font-size: 16px">Quantity</label>
+				</div>
+				<div class="col-sm-2">
+						<input type="number"  min="1" class="form-control" placeholder="0" name="quan" id ="quan" ng-model="quan"  value = "1"  width="5px;" >
+					</div>
+					<div class="col-sm-3">
+					</div>
+					<div ng-if= "data.is_auction === '1'" >
+						<div class="col-sm-6">
+							<div ng-if= "diff === 4" >
+								Last Day to bid
+							</div>	
+							<div ng-if= "diff < 4" >	
+						  		{{remainingDays}}d left
+						  	</div>
+						  	<div ng-if= "diff > 4" >	
+						  		Bidding expired
+						  	</div>
+						</div>
+					</div>	
+			</div><br><br>
+			<div ng-if= "data.is_fixed != 0" >
+				<div class="row">
+					<div class="col-sm-6">
+					<label> Price: {{data.price}}</label>
+					</div>
+					<div class="col-sm-6">
+					<label> Ship price: ${{data.ship_price}}</label>
+					</div>
+				</div><br><br>
+			</div>
+			<div class="row">
+				<div class="col-sm-5">
+					<div class="row">
+						<div ng-if= "data.is_auction === '1'" >
+							<div ng-if= "diff < 5" >
+								<div class="col-sm-6">
+									<input type="text" class="form-control" style="text-align: right;" id="bidAmount" ng-model ="bidAmount" >
+								</div>
+								<div class="col-sm-6">
+									<input type="button" class="on btn btn-primary" id="bidButton"  value="Make Offer" ng-click="addBid(bidAmount, data._id);">
+								</div>
+							</div>
+							<div ng-if= "diff > 4" >
+								<div ng-if= "winner ===1" >
+									<div class="col-sm-6">
+										<font color="green" size="5" >You won the bid. Buy it now</font>
+									</div>
+									<div class="col-sm-6">
+										<input type="button" class="on btn btn-primary" id="bidButton"  value="Buy Now" ng-click="buyNow(data.prod_id);"
+										value="buyNow" >
+									</div>
+								</div>	
+							</div>
+						</div>
+					</div>	
+				</div>
+			</div>	<br><br>
+			<div ng-if= "data.is_fixed != 0" >
+			<div class="row">
+				<div class="col-sm-5">
+					<div class="row">
+						<div class="col-sm-6">
+						</div>
+						<div class="col-sm-6">
+							<input type="button" id ="addToCart" ng-click = "addToCart(quan, data.brand, data.label, data.condition, data.price, data.ship_price,data._id);" class="on btn btn-primary" value="Add To Cart">
+						</div>
+					</div>	
+				</div>
+			</div>
+			</div>
+			<br>
+		</div>
+	    </div>
+	</div>
+</div>
+</body>
+</html>
+
+				
+			
+			
+			
+		

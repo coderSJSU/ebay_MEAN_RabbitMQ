@@ -26,6 +26,10 @@ $scope.init = function initProducts() {
 			alert("Login First to vew cart");
 			window.location.assign("/signin");
 		}
+		else if (data.statusCode == 500) {
+			alert("Some error occurred, Redirecting to login screen");
+			window.location.assign("/signin");
+		}
 		else
 			{
 			$scope.data = [ ];
@@ -52,6 +56,10 @@ $scope.displayProduct = function(prod_id) {
 		}
 		else if (data.statusCode == 402) {
 		}
+		else if (data.statusCode == 500) {
+			alert("Some error occurred, Redirecting to login screen");
+			window.location.assign("/signin");
+		}
 		else if(data.statusCode ==405){
 			alert("login first to continue");
 			window.location.assign("/signIn");
@@ -73,7 +81,9 @@ $scope.displayProduct = function(prod_id) {
 }
 
 
-
+$scope.sellProduct = function(type) {
+	window.location.assign("/prodDescription?type="+type);
+}
 
 $scope.addProduct = function() {
 	if($scope.selectedBrand == undefined || $scope.selectedBrand==null || $scope.selectedBrand=="")
@@ -109,6 +119,10 @@ $scope.addProduct = function() {
 		if (data.statusCode == 401) {
 		}
 		else if (data.statusCode == 402) {
+		}
+		else if (data.statusCode == 500) {
+			alert("Some error occurred, Redirecting to login screen");
+			window.location.assign("/signin");
 		}
 		else if(data.statusCode ==405){
 			alert("login first to continue");

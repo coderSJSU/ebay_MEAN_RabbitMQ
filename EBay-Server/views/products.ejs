@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- Bootstrap Core CSS -->
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+	<link rel='stylesheet' href='/stylesheets/style.css' />
+	<script	src="/js/angular.min.js"></script>
+    <!-- Custom CSS -->
+    <link href="/stylesheets/business-casual.css" rel="stylesheet">
+	<script src="/angularjs/prodRedirect.js"></script>
+</head>
+
+<header>
+    <!-- Navigation -->
+    <%var user1 =  username %>
+     <%username = user1 %>
+    <% include header %>
+</header>
+
+<body ng-app="prodRedirect" ng-controller="prodRedirect">
+<br><br>
+
+
+<div ng-repeat="item in data track by $index">
+<div class="row">
+  <div class="col-sm-2"></div>
+ 	 <div class="col-sm-9">
+	<div class="panel ">
+	<div class="panel-body">
+	<div class="row">
+	<div class="col-sm-3">
+	<a href="#" >
+				     <img src="/img/{{item.brand}}.jpg" class="listImage" alt="{{item.description}}">
+				</a>
+		</div>
+	<div class="col-sm-9">
+		<a href='/showProductDetails?prod_id={{item._id}}'><label> <font style="font-weight: bold; font-size: medium;">{{item.brand}}: {{item.label}}</font></label></a>
+		<div class="row">
+			<div class="col-sm-9">
+				<label><font style="font-weight:normal; font-size: small;">{{item.description}}</font></label>
+			</div>
+		</div>
+		<br>
+		<div class="row">
+			
+		</div>
+		<br>
+		<div class="row">
+			<div class="col-sm-5">
+				<label>Condition: {{item.condition}}</label>
+			</div>
+			<div class="col-sm-1">
+			</div>
+			<div class="col-sm-4">
+			</div>
+		</div>
+		<br>
+		<div ng-if= "item.is_fixed === 1" >
+			<div class="row">
+				<div class="col-sm-5">
+					<label>Price: {{item.price}}</label>
+				</div>
+				<div class="col-sm-1">
+				</div>
+			</div>
+		</div>
+		<div ng-if= "item.is_auction === 1" >
+			<div class="row">
+				<div class="col-sm-5">
+					<label>For Auction</label>
+				</div>
+				<div class="col-sm-1">
+				</div>
+			</div>
+		</div>
+		<div ng-if= "item.is_fixed === 1" >
+			<div class="row">
+				<div class="col-sm-5">
+					<label>For Sale</label>
+				</div>
+				<div class="col-sm-1">
+				</div>
+			</div>
+		</div>
+		<br>
+		
+	</div>
+	</div></div>
+	
+	
+	</div></div>
+	<div class="col-sm-2"></div></div>
+	<br>
+</body>
+</html>
+

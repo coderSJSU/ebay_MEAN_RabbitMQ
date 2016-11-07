@@ -1,10 +1,9 @@
 var ejs = require("ejs");
-var mysql = require('./mysql');
 var winston = require('winston');
 var mongo = require("./mongo");
 var mongoURL = "mongodb://localhost:27017/test";
 ObjectID = require('mongodb').ObjectID;
-
+var mq_client = require('../rpc/client');
 
 var myCustomLevels = {
 	    levels: {
@@ -25,110 +24,39 @@ var bidLogger = new (winston.Logger)({
     transports: [new winston.transports.File({filename: 'F:/lib/bidding.log'})]
   });
 
-function addBid(msg, callback){
-	
-	var amount = msg.amount;
-	var prodId = msg.prodId;
-	var user_id = msg.user_id;
+function addBid(req, res){
+	var amount = req.param("amount");
+	var prodId = req.param("prodId");
+	var user_id = req.session.user_id;
 	var json_responses;
-	var obj_id = new ObjectID(prodId);
-	var res = {};
-	mongo.connect(mongoURL, function(){
-		var coll = mongo.collection('product');
-		console.log("1");
-		coll.find({"_id": obj_id}).forEach(function(prod, err){
+	if(user_id == undefined){
+		json_responses = {"statusCode" : 405};
+		res.send(json_responses);
+	}
+	else{
+		var msg_payload = { "amount": amount, "prodId": prodId, "user_id": user_id};
+		mq_client.make_request('add_bid_queue',msg_payload, function(err,results){
 			if(err){
-				console.log("error: " + JSON.stringify(err));
-				res.value = "error";
-				res.code = "402";
-    			}
-    			else
-    			{
-    				console.log("2" + prod.bid.bid_amount);
-    				if(prod.bid.bid_amount == null || prod.bid.bid_amount == undefined || amount > parseInt(prod.bid.bid_amount)){
-    					console.log("3");
-    					coll.update({"_id":obj_id},{$set:{bid:{
-    						"bid_amount": amount, 
-    						"customer_id": user_id,
-    						"add_ts":new Date()
-    	    		}}}, function(err, cart){
-    	    			var json_responses;
-    	    			if(err){
-    	    				res.value = "error";
-	    					res.code = "402";
-    	    			}
-    	    			else
-    	    			{
-    	    				if(cart !=null){
-    	    					res.value = "Success";
-    	    					res.code = "200";
-    	    				}
-    	    				else
-    	    					res.value = "error";
-    	    					res.code = "402";
-    	    			}
-    	    		});
-    					
-    				var count = 0;
-    				console.log("pre count: " + prod.bidCount);
-    				if(isNaN(prod.bidCount)){
-    					console.log("pre count: " + prod.bidCount);
-    					count = 0;
-    				}
-    				else
-    					count = parseInt(prod.bidCount) + 1;
-    				coll.update({"_id":obj_id},
-    				{$set: {bidCount: count}}		
-    				);
-    				res.statusCode = "200";
-					callback(null, res);
-    				}
-    				else{
-    					res.statusCode = "401";
-    					callback(null, res);
-    				}
-    			}
-	    		});
-	}); 
+				json_responses = {"statusCode" : 405};
+				res.send(json_responses);
+			}
+			else 
+			{
+				if(results.statusCode == 200){
+					bidLogger.bid("bid submitted",{ user: user_id, product_id: prodId, amount: amount});
+					json_responses = {"statusCode" : 200};
+    				res.send(json_responses);
+				}
+				else {    
+					json_responses = {"statusCode" : results.statusCode};
+					res.send(json_responses);
+				}
+			}  
+		});
+	}
 }
 
-function addToCart(msg, callback){
-	
-	var res = {};
-	console.log("In addtocart: quantity" + msg.quantity);
-		mongo.connect(mongoURL, function(){
-			console.log('Connected too mongo at: ' + mongoURL + "user_id: " + msg.user_id);
-			var coll = mongo.collection('cart');
-	    		coll.insert({
-	    			"product_id":msg.product_id, 
-	    			"user_id": msg.user_id, 
-	    			"brand": msg.brand,
-	    			"quantity": msg.quantity,
-	    			"label": msg.label,
-	    			"price": msg.price,
-	    			"condition": msg.condition,
-	    			"deliveryPrice": msg.deliveryPrice,
-	    			"add_ts":new Date()
-	    		}, function(err, cart){
-	    			console.log("cart -- "+cart.insertedIds);
-	    			var json_responses;
-	    			if(err){
-	    				res.value = "error";
-    					res.statusCode = "401";
-    					callback(null, res);
-	    			}
-	    			else
-	    			{
-	    				res.value = "Success Login";
-	    				res.statusCode = "200";
-	    				callback(null, res);
-	    			}
-	    		});
-		}); 
-}
-
-
-function addToCartOld(req, res){
+function addToCart(req, res){
 	
 	// check user already exists
 	var data = req.param("data");
@@ -136,149 +64,131 @@ function addToCartOld(req, res){
 	var user_id = req.session.user_id;
 	
 	var json_responses;
-	var post  = {product_id:finalData.id, user_id: user_id, quantity: finalData.quantity};
-	var addBid="insert into cart set ? ";
-	var json_responses;
 	if(user_id == undefined){
 		json_responses = {"statusCode" : 405};
 		res.send(json_responses);
 	}
-	mysql.insertqueryWithParamsReturnData(function(err,results, post){
-		if(err){
-			json_responses = {"statusCode" : 401};
-			res.send(json_responses);
-		}
-		else
-		{	
-			logger.event("added to cart", { user: user_id, product: finalData.id});	
-			json_responses = {"statusCode" : 200, "id":results.insertId, "post": post};
-				res.send(json_responses);
-		}
-		},addBid, post);		
+	else{
 		
-}
-
-function getCart(msg, callback){
-	
-	var cust_id = msg.user_id;
-	var res = {};
-		mongo.connect(mongoURL, function(){
-		var coll = mongo.collection('cart');
-		console.log("inside getcart");
-		coll.find({"user_id":cust_id}).toArray(function(err, products){
+		var msg_payload = {"product_id":finalData.id, 
+    			"user_id": user_id, 
+    			"brand": finalData.brand,
+    			"quantity": finalData.quantity,
+    			"label": finalData.label,
+    			"price": finalData.price,
+    			"condition": finalData.condition,
+    			"deliveryPrice": finalData.deliveryPrice};
+		mq_client.make_request('addToCart_queue',msg_payload, function(err,results){
 			if(err){
-				console.log("inside getcart err");
-				res.statusCode = "401";
-				res.products = [];
-				callback(null, res);
+				throw err;
 			}
-			else
-    			{
-				console.log("inside getcart success" + JSON.stringify(products));
-				res.statusCode = "200";
-				res.products = products;
-				callback(null, res);
-    			}
-    		});
+			else 
+			{
+				console.log("inside success");
+				if(results.statusCode == 200){
+					console.log("added to cart");
+					logger.event("added to cart", { user: user_id, product: finalData.id});	
+    				json_responses = {"statusCode" : 200};
+					res.send(json_responses);
+				}
+				else {    
+					json_responses = {"statusCode" : 401};
+    				res.send(json_responses);
+				}
+			}  
 		});
+	}
 }
 
-function getCartOld(req, res){
+
+function getCart(req, res){
 	
 	var cust_id = req.session.user_id;
 	var json_responses;
-	var queryString = 'select p.prod_id , p.label,p.brand as brand_id, p.description,(select c.desc from conditions c where c.conditionId = p.condition)  conditions, ' + 
-	'(select b.label from brand b where b.brand_id = p.brand)  brand, c.quantity, '+ 
-  ' (case when p.ship_price is null then 0 else  p.ship_price end ) ship_price , (case when p.price is null then 0 else  p.price end ) price  '+
-  ' from product p, cart c where p.prod_id = c.product_id and c.user_id =' + cust_id+ '';
+	if(cust_id == undefined){
+		json_responses = {"statusCode" : 405};
+		res.send(json_responses);
+	}
+	else{
+		var msg_payload = { "user_id": cust_id};
+		mq_client.make_request('getCart_queue',msg_payload, function(err,results){
+			if(err){
+				throw err;
+			}
+			else 
+			{
+				if(results.statusCode == 200){
+					console.log("got cart details");
+					json_responses = {"statusCode" : 200, "data": results.products};
+					res.send(json_responses);
+					//res.send({"login":"Success"});
+				}
+				else {    
+					json_responses = {"statusCode" : 401};
+					res.send(json_responses);	
+				}
+			}  
+		});
+	}
+}
+
+
+function getCartAmount(req, res){
+	
+	var cust_id = req.session.user_id;
+	var json_responses;
 	
 	if(cust_id == undefined){
 		json_responses = {"statusCode" : 405};
 		res.send(json_responses);
 	}
 	else{
-	
-	mysql.fetchData(function(err,results){
-if(err){
-	json_responses = {"statusCode" : 401};
-	res.send(json_responses);
-}
-else 
-{
-	json_responses = {"statusCode" : 200, "data": results};
-	res.send(json_responses);
-}
-
-},queryString,'');
+		var msg_payload = {"user_id":cust_id};
+		mq_client.make_request('cartAmount_queue',msg_payload, function(err,results){
+			
+			console.log(results);
+			if(results.statusCode == "401"){
+				json_responses = {"statusCode" : 401};
+				res.send(json_responses);
+			}
+			else 
+			{
+				console.log("inside getCartAmount success");
+				json_responses = {"statusCode" : 200, "data": results.products};
+				res.send(json_responses);
+			}  
+		});
 	}
 }
 
-function getCartAmount(msg, callback){
-	
-	var cust_id = msg.user_id;
-	var res = {};
-	
-		mongo.connect(mongoURL, function(){
-			console.log('Connected too mongo at: ' + mongoURL );
-			var coll = mongo.collection('cart');
-			coll.find({"user_id":cust_id}).toArray(function(err, products){
-				if(err){
-					res.statusCode = "401";
-					callback(null, res);
-    			}
-    			else
-    			{
-    				if(products != null){
-    					res.statusCode = "200";
-    					res.products = products;
-    					callback(null, res);
-    				}
-    				else{
-    					res.statusCode = "200";
-    					res.products = [];
-    					callback(null, res);
-    				}
-    			}
-    		});
-		});
-}
-
-function removeFromCart(msg, callback){
-	var cart_id = msg.cart_id;
-	var res = {};
+function removeFromCart(req, res){
+	var user_id = req.session.user_id;
+	var json_responses;
+	var cart_id = req.param("cart_id");
+	var json_responses;
+	if(user_id == undefined){
+		json_responses = {"statusCode" : 405};
+		res.send(json_responses);
+	}
+	else{
 		var obj_id = new ObjectID(cart_id);
 		console.log("obj_id: " + obj_id);
-		mongo.connect(mongoURL, function(){	
-		var coll = mongo.collection('cart');
-		coll.remove({"_id":obj_id}, function(err, products){
-			console.log(products.description);
-			if(err){
-				res.statusCode= "401";
-				callback(null, res);
-	    			}
-			else
-    			{
-				res.statusCode= "200";
-				callback(null, res);
-    			}
-    		});
-		});
-}
-
-
-function deleteFromCart(err,results, post){
-	mysql.deleteData(function(err,results, post){
-		if(err){
-			json_responses = {"statusCode" : 401};
-			res.send(json_responses);
-		}
-		else
-		{	
-			console.log(post);
+		var msg_payload = { "cart_id": cart_id};
+		mq_client.make_request('removeFromCart_queue',msg_payload, function(err,results){
+			
+			console.log(results);
+			if(results.statusCode != "200"){
+				json_responses = {"statusCode" : 401};
+				res.send(json_responses);
+			}
+			else 
+			{
+				logger.event("removed to cart", { user: user_id});
 				json_responses = {"statusCode" : 200};
 				res.send(json_responses);
-		}
-		},deleteItem, '');
+			}
+		});
+	}
 }
 
 function payment1(req, res){
@@ -357,178 +267,90 @@ function emptyCart(req, res){
 	});
 }
 
-exports.getProductQuanity = function(msg, callback){
-	var res = {};
-
-	var obj_id = new ObjectID(msg.prod_id);
-	mongo.connect(mongoURL, function(){
-		console.log('Connected too mongo at: ' + mongoURL + "product_id   :" + msg.prod_id );
-		var coll = mongo.collection('product');
-		coll.findOne({"_id":obj_id},{"quantity":1},function(err, product){
-			if(err){
-				console.log('Connected too mongo at: ' + mongoURL + "product_id   :" + msg.prod_id );
-				//json_responses = {"statusCode" : 401};
-				res.statusCode = 402;
-				callback(null, res);
-			}
-			else
-			{
-				if(product!=null){
-					res.quantity = product.quantity;
-					res.statusCode = 200;
-					callback(null, res);
-				}
-				else{
-					res.quantity = 0;
-					res.statusCode = 200;
-					callback(null, res);
-				}
-			}
-		});
-	});
-};
-
-
-function getAmount(msg, callback){
-	
-	prod_id = msg.prod_id;
-	var res = {};
-	var obj_id = new ObjectID(prod_id);
-	mongo.connect(mongoURL, function(){
-		console.log('Connected too mongo at: ' + mongoURL + "product_id   :" + msg.prod_id );
-		var coll = mongo.collection('product');
-		coll.findOne({"_id":obj_id},{"bid":1,"_id":0},function(err, product){
-			if(err){
-				console.log(err);
-				res.statusCode = "401";
-				callback(null, res);
-			}
-			else
-			{
-				console.log(JSON.stringify(product));
-				res.statusCode = "200";
-				res.product = product;
-				callback(null, res);
-			}
-		});
-	});
-	
-}	
-
-
-function getAmountOld(req, res){
-	
-	prod_id = req.session.prod_id;
-	is_urgent = req.session.is_urgent;
-	//delete req.session['prod_id'];
-	delete req.session['is_urgent'];
-	
-	var cust_id = req.session.user_id;
-	var json_responses;
-
-	var queryString = 'select max(bid_amount) as max'+ 
-	  ' from bid where product_id =' + prod_id+ '';
+exports.getProductQuanity = function(req, res){
+	var data = req.param("data");
+	var finalData = JSON.parse(data);
+	var msg_payload = { "prod_id": finalData.prod_id};
+	mq_client.make_request('productQuantity_queue',msg_payload, function(err,results){
 		
-		if(cust_id == undefined){
-			json_responses = {"statusCode" : 405};
-			res.send(json_responses);
+		console.log(results);
+		if(err){
+			throw err;
 		}
-		else{
-				mysql.fetchData(function(err,results){
-			if(err){
+		else 
+		{
+			console.log("inside getProductQuanity success");
+			if(results.statusCode == 200){
+				console.log("valid getProductQuanity");
+				if(results.quantity!=null || results.quantity != "")
+					json_responses = {"statusCode" : 200, "quantity": results.quantity};
+				else
+					json_responses = {"statusCode" : 200, "quantity": 0};
+				res.send(json_responses);
+			}
+			else {    
 				json_responses = {"statusCode" : 401};
 				res.send(json_responses);
 			}
-			else 
-			{
-				json_responses = {"statusCode" : 200, "bid": results};
-				res.send(json_responses);
-			}
-			
-			},queryString,'');
-		}
+		}  
+	});
 	
-}	
+};
 
 
-function soldOld(req, res){
-	var user_id = req.session.user_id;
+function getAmount(req, res){
+	
 	prod_id = req.session.prod_id;
-	delete req.session['prod_id'];
-	
+	is_urgent = req.session.is_urgent;
+	delete req.session['is_urgent'];
+	console.log("p"+prod_id);
 	var cust_id = req.session.user_id;
 	var json_responses;
 
-	var post  = {customer_id: user_id, product_id : prod_id, quantity: "1"};
-	var addSale="insert into sales set ? ";
-	var json_responses;
-	mysql.insertqueryWithParamsReturnData(function(err,results, post){
-		if(err){
-			json_responses = {"statusCode" : 401};
+	var msg_payload = { "prod_id": prod_id};
+	mq_client.make_request('getAmount_queue',msg_payload, function(err,results){
+		
+		console.log(results);
+		if(results.statusCode!= "200"){
+			json_responses = {"statusCode" : 200};
 			res.send(json_responses);
 		}
-		else
-		{	
-			logger.event("product sold", { user: user_id, product: prod_id, quantity: "1"});
-				json_responses = {"statusCode" : 200, };
+		else 
+		{
+			console.log("inside success");
+			if(results.statusCode == 200){
+				json_responses = {"statusCode" : 200, "bid": results.product};
 				res.send(json_responses);
-		}
-		},addSale, post);
+			}
+			else {    
+				json_responses = {"statusCode" : 401};
+				res.send(json_responses);
+			}
+		}  
+	});
+	
+	
 }	
 
-function sold(msg, callback){
-	var res = {};
-	var user_id = msg.cust_id;
-	var prod_id = msg.prod_id;
-
-	var obj_id = new ObjectID(prod_id);
-	console.log("obj_id: " + obj_id);
-	
-	mongo.connect(mongoURL, function(){
-		console.log('Connected too mongo at: ' + mongoURL );
-		var coll = mongo.collection('product');
-		coll.find({"_id": obj_id}).forEach(function(prod, err){
-			if(err){
-				console.log("error: " + JSON.stringify(err));
-				res.statusCode = "402";
-				callback(null, res);
-    			}
-    			else
-    			{
-    				var obj_id = new ObjectID(user_id);
-    				console.log("cust: " + obj_id);
-    				coll = mongo.collection('login');
-    				coll.update({"_id":obj_id},{$push:{bought:{
-    					"prod_id": prod._id,
-    					"label": prod.label,
-    					"description": prod.description,
-    					"brand": prod.brand,
-    					"quantity":prod.quantity ,
-    					"price": prod.price,
-    					"condition":prod.condition,
-    					"category_id":prod.category_id, 
-    					"ship_price": prod.ship_price,
-						"add_ts":new Date()
-	    		}}}, function(err, cart){
-	    			var json_responses;
-	    			if(err){
-	    				res.statusCode = "402";
-	    				callback(null, res);
-	    			}
-	    			else
-	    			{
-	    				if(cart !=null){
-	    					res.statusCode = "200";
-	    					callback(null, res);
-	    				}
-	    				else
-	    					res.statusCode = "402";
-	    					callback(null, res);
-	    			}
-	    		});
-			
-    			}
-		});
+function sold(req, res){
+	var user_id = req.session.user_id;
+	prod_id = req.session.prod_id;
+	delete req.session['prod_id'];
+	var cust_id = req.session.user_id;
+	console.log("prod_id"+ prod_id);
+	var json_responses;
+	var msg_payload = { "prod_id": prod_id, "cust_id": cust_id};
+	mq_client.make_request('instantBuy_queue',msg_payload, function(err,results){
+		console.log(results);
+		if(results.statusCode != "200"){
+			json_responses = {"statusCode" : 402};
+			res.send(json_responses);
+		}
+		else 
+		{
+			json_responses= {"statusCode" : 200};
+			res.send(json_responses);
+		}  
 	});
 }	
 

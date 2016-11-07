@@ -21,6 +21,10 @@ $scope.init = function initProducts() {
 				alert("Login First to vew cart");
 				window.location.assign("/signin");
 			}
+			else if (data.statusCode == 500) {
+				alert("Some error occurred, Redirecting to login screen");
+				window.location.assign("/signin");
+			}
 			else
 				{
 				$scope.data = [ ];
@@ -56,7 +60,7 @@ $scope.init = function initProducts() {
 		}
 		else{
 		var dPrice = ship_price;
-		var cartData = JSON.stringify({ 'brand':brand,'label': label, 'price': price,'condition':canditions, 'deliveryPrice':dPrice, 'quantity':$scope.quantity, 'id':prod_id });
+		var cartData = JSON.stringify({ 'brand':brand,'label': label, 'price': price,'condition':canditions, 'deliveryPrice':dPrice, 'quantity':$scope.quan, 'id':prod_id });
 		var dataToVerify = JSON.stringify({ 'prod_id':prod_id });
 		$http({
 			method : "POST",
@@ -71,11 +75,15 @@ $scope.init = function initProducts() {
 			else if (data.statusCode == 405) {
 				alert("Some error occurred, please login and try again");
 			}
+			else if (data.statusCode == 500) {
+				alert("Some error occurred, Redirecting to login screen");
+				window.location.assign("/signin");
+			}
 			else
 				{
 ////					var results = data.data;
 					var q = data.quantity;
-					if(parseInt(data.quantity)>=parseInt($scope.quantity))
+					if(parseInt(data.quantity)>=parseInt($scope.quan))
 				{
 				$http({
 					method : "POST",
@@ -119,6 +127,10 @@ $scope.init = function initProducts() {
 			if (data.statusCode == 401) {
 			}
 			else if (data.statusCode == 402) {
+			}
+			else if (data.statusCode == 500) {
+				alert("Some error occurred, Redirecting to login screen");
+				window.location.assign("/signin");
 			}
 			else
 				{

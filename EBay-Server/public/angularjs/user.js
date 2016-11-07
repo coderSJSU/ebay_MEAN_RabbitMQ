@@ -23,6 +23,10 @@ user.controller('user', function($scope, $http) {
 			else if (data.statusCode == 402) {
 				$scope.invalid_user = false;
 			}
+			else if (data.statusCode == 500) {
+				alert("Some error occurred, Redirecting to login screen");
+				window.location.assign("/signin");
+			}
 			else
 				{
 				$scope.invalid_travel = true;
@@ -80,6 +84,10 @@ user.controller('user', function($scope, $http) {
 			}
 			else if (data.statusCode == 402) {
 				alert("Some Error occurred. Please retry later!");
+			}
+			else if (data.statusCode == 500) {
+				alert("Some error occurred, Redirecting to login screen");
+				window.location.assign("/signin");
 			}
 			else
 				{

@@ -1,0 +1,99 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- Bootstrap Core CSS -->
+    <link href="/stylesheets/bootstrap.min.css" rel="stylesheet">
+	<link rel='stylesheet' href='/stylesheets/style.css' />
+	<script	src="/js/angular.min.js"></script>
+    <!-- Custom CSS -->
+    <link href="/stylesheets/business-casual.css" rel="stylesheet">
+	<script src="/angularjs/prodRedirect.js"></script>
+</head>
+
+<header>
+    <!-- Navigation -->
+    <%var user1 =  username %>
+     <%username = user1 %>
+    <% include header %>
+</header>
+
+<body ng-controller="prodRedirect" ng-app="prodRedirect" style="background-color: white; background-image: none;" >
+    <div class="brand"><%= title %></div>
+    <div class="container" style="padding: 20px">
+		<ul style="list-style: none; ">
+			<li style="float: left"><a ng-href='#here' ng-click='sellProduct("1")' >
+				<img  alt="sell your car" class="sell_img l-categories__picture unveil-loaded l-lazyload-image" role="" src="/img/auto.jpg">
+				<span class="sell_list" style="display: block">Automobile</span></a>
+			</li>
+			<li  style="float: left;">
+				<a href="#	"  ng-click='sellProduct("2")'>
+					<img  data-alt="" alt="sell your phone" class="sell_img l-categories__picture unveil-loaded l-lazyload-image"  src="/img/mobiles.jpg">
+					<span  class = "sell_list">Phones</span></a>
+			</li>
+			<li  style="float: left"><a href="#"  ng-click='sellProduct("3")'>
+				<img  data-alt="" alt="sell your tablet" class="sell_img l-categories__picture unveil-loaded l-lazyload-image" role="" src="/img/tablets.jpg">
+				<span class = "sell_list" >Tablets</span></a>
+			</li>
+			<li style="float: left"><a href="#" ng-click='sellProduct("4")' >
+				<img  data-alt="" alt="sell your laptop" class="sell_img l-categories__picture unveil-loaded l-lazyload-image" role="" src="/img/laptop.jpg">
+				<span class="sell_list" style="display: block">Laptops</span></a>
+			</li>
+			<li style="float: left"><a href="#" ng-click='sellProduct("5")' >
+				<img  data-alt="" alt="sell your camera" class="sell_img l-categories__picture unveil-loaded l-lazyload-image" role="" src="/img/camera.jpg">
+				<span class="sell_list" style="display: block">Camera</span></a>
+			</li>
+			<li style="float: left"><a href="#" ng-click='sellProduct("6")'>
+				<img   alt="sell your cycle" class="sell_img sell_img l-categories__picture unveil-loaded l-lazyload-image" role="" src="/img/cycle.jpg">
+				<span class="sell_list" style="display: block">Cycle</span></a>
+			</li>
+			<li style="float: left"><a href="#" ng-click='sellProduct("7")'>
+				<img  data-alt="" alt="sell your instrument" class="sell_img l-categories__picture unveil-loaded l-lazyload-image" role="" src="/img/instrument.jpg">
+				<span class="sell_list" style="display: block">Instrument</span></a>
+			</li>
+			<li style="float: left"><a href="#" ng-click='sellProduct("8")'>
+				<img  data-alt="" alt="sell your motorcycle" class="sell_img l-categories__picture unveil-loaded l-lazyload-image" role="" src="/img/motorcycle.jpg">
+				<span class="sell_list" style="display: block">Motorcycle</span></a>
+			</li>
+			<li style="float: left"><a href="#" ng-click='sellProduct("9")'>
+				<img  data-alt="" alt="sell your drones" class="sell_img l-categories__picture unveil-loaded l-lazyload-image" role="" src="/img/drone.jpg">
+				<span class="sell_list" style="display: block">Drone</span></a>
+			</li>
+		</ul>
+        
+    </div>
+    <!-- /.container -->
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12 text-center">
+                    <p>Copyright &copy; ebay_sjsu Website Fall16</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- jQuery -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Script to Activate the Carousel -->
+    <script>
+    $('.carousel').carousel({
+        interval: 5000 //changes the speed
+    })
+    </script>
+
+</body>
+
+</html>

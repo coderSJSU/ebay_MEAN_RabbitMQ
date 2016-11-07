@@ -9,7 +9,11 @@ $scope.init = function() {
 		method : "POST",
 		url : '/getAmount'
 	}).success(function(data) {
-		if (data.statusCode == 401) {
+		if (data.statusCode == 500) {
+			alert("Some error occurred, Redirecting to login screen");
+			window.location.assign("/signin");
+		}	
+		else if (data.statusCode == 401) {
 		}
 		else if (data.statusCode == 405) {
 			alert("Login First");
@@ -18,8 +22,9 @@ $scope.init = function() {
 		else
 			{
 			var bidAmount = 0;
-			if(data.bid.length> 0)
-				bidAmount = data.bid[0].max;
+			if(data.bid.bid !=null)
+				bidAmount = data.bid.bid.bid_amount;
+
 			else{
 				
 				alert("Some error occurred");
@@ -60,6 +65,10 @@ $scope.submit = function() {
 				url : '/sold'
 			}).success(function(data) {
 				if (data.statusCode == 401) {
+				}
+				else if (data.statusCode == 500) {
+					alert("Some error occurred, Redirecting to login screen");
+					window.location.assign("/signin");
 				}
 				else if (data.statusCode == 405) {
 					alert("Some error occurred");
